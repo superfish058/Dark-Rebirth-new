@@ -1,0 +1,40 @@
+{
+  "name": "dark-rebirth",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Dark Rebirth - 多端适配的个人应用管理平台",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "format": "prettier --write src/",
+    "test": "vitest",
+    "test:ui": "vitest --ui"
+  },
+  "dependencies": {
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.5",
+    "pinia": "^2.1.7",
+    "@supabase/supabase-js": "^2.38.4",
+    "axios": "^1.6.2",
+    "element-plus": "^2.5.0",
+    "vant": "^4.8.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "@vue/tsconfig": "^0.5.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.0",
+    "vue-tsc": "^1.8.27",
+    "sass": "^1.69.5",
+    "eslint": "^8.56.0",
+    "eslint-plugin-vue": "^9.19.2",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "prettier": "^3.1.1",
+    "vitest": "^1.1.0",
+    "@vue/test-utils": "^2.4.3",
+    "jsdom": "^23.0.1"
+  }
+}

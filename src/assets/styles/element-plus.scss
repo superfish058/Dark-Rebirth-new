@@ -1,0 +1,1162 @@
+@use "@/assets/styles/variables.scss" as *;
+
+// Element Plus 样式覆盖
+// 使用设计系统的变量来覆盖 Element Plus 的默认样式
+
+// ==================== 颜色变量覆盖 ====================
+
+// 主色调
+.el-button--primary {
+  --el-button-bg-color: #{$primary-color};
+  --el-button-border-color: #{$primary-color};
+  --el-button-hover-bg-color: #{$primary-light};
+  --el-button-hover-border-color: #{$primary-light};
+  --el-button-active-bg-color: #{$primary-dark};
+  --el-button-active-border-color: #{$primary-dark};
+}
+
+.el-button--success {
+  --el-button-bg-color: #{$success-primary};
+  --el-button-border-color: #{$success-primary};
+  --el-button-hover-bg-color: #16a34a;
+  --el-button-hover-border-color: #16a34a;
+}
+
+.el-button--danger {
+  --el-button-bg-color: #{$error-primary};
+  --el-button-border-color: #{$error-primary};
+  --el-button-hover-bg-color: #dc2626;
+  --el-button-hover-border-color: #dc2626;
+}
+
+// ==================== 按钮组件 ====================
+
+.el-button {
+  font-family: $font-family-base;
+  font-weight: $font-weight-medium;
+  border-radius: $radius-base;
+  transition: all $duration-fast $ease-out;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: $shadow-md;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// ==================== 输入框组件 ====================
+
+.el-input {
+  --el-input-bg-color: #{$bg-secondary};
+  --el-input-text-color: #{$text-primary};
+  --el-input-border-color: #{$border-primary};
+  --el-input-hover-border-color: #{$primary-color};
+  --el-input-focus-border-color: #{$primary-color};
+  --el-input-placeholder-color: #{$text-tertiary};
+
+  .el-input__wrapper {
+    border-radius: $radius-base;
+    background: $bg-secondary;
+    box-shadow: none;
+    transition: all $duration-fast $ease-out;
+
+    &:hover {
+      border-color: $primary-color;
+    }
+
+    &.is-focus {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    }
+  }
+
+  .el-input__inner {
+    color: $text-primary;
+    background: transparent;
+
+    &::placeholder {
+      color: $text-tertiary;
+    }
+  }
+}
+
+// ==================== 选择器组件 ====================
+
+.el-select {
+  .el-select__wrapper {
+    background: $bg-secondary;
+    border-color: $border-primary;
+    border-radius: $radius-base;
+    padding: $spacing-2 $spacing-3;
+    box-shadow: none;
+    transition: all $duration-fast $ease-out;
+
+    &:hover {
+      border-color: $primary-color;
+      background: $bg-hover;
+      box-shadow: none;
+    }
+
+    &.is-focus {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+      background: $bg-hover;
+    }
+  }
+
+  .el-select__input {
+    color: $text-primary;
+    background: transparent;
+    font-size: $font-size-base;
+  }
+
+  .el-select-dropdown {
+    background: $bg-card;
+    border: 1px solid $border-primary;
+    border-radius: $radius-md;
+    box-shadow: $shadow-lg;
+    max-height: 300px;
+    overflow-y: auto;
+
+    .el-select-dropdown__item {
+      color: $text-primary;
+      padding: $spacing-3 $spacing-4;
+      border-radius: $radius-sm;
+      transition: all $duration-fast $ease-out;
+
+      &:hover {
+        background: $bg-hover;
+        color: $primary-color;
+      }
+
+      &.is-selected {
+        background: $primary-color;
+        color: $text-primary;
+      }
+    }
+  }
+}
+
+// ==================== 表单组件 ====================
+
+.el-form {
+  .el-form-item {
+    margin-bottom: $spacing-6;
+
+    &__label {
+      color: $text-secondary;
+      font-weight: $font-weight-medium;
+    }
+
+    &__error {
+      color: $error-primary;
+    }
+  }
+}
+
+// ==================== 文本域组件 ====================
+
+.el-textarea {
+  .el-textarea__inner {
+    background: $bg-secondary;
+    border-color: $border-primary;
+    border-radius: $radius-base;
+    color: $text-primary;
+    font-family: $font-family-base;
+    font-size: $font-size-base;
+    padding: $spacing-3;
+    transition: all $duration-fast $ease-out;
+
+    &:hover {
+      border-color: $border-primary;
+      background: $bg-secondary;
+    }
+
+    &:focus {
+      border-color: $primary-color;
+      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+      background: $bg-hover;
+    }
+
+    &::placeholder {
+      color: $text-tertiary;
+    }
+  }
+}
+
+// ==================== 对话框组件 ====================
+
+.el-dialog {
+  --el-dialog-bg-color: #{$bg-card};
+  --el-box-shadow-light: 0 0 12px rgba(0, 0, 0, 0.5);
+  border-radius: $radius-md;
+  background: $bg-card;
+  border: 1px solid $border-primary;
+  box-shadow: $shadow-xl;
+
+  .el-dialog__header {
+    border-bottom: 1px solid $border-primary;
+    padding: $spacing-3 $spacing-4;
+
+    .el-dialog__title {
+      color: $text-primary;
+      font-size: $font-size-base;
+      font-weight: $font-weight-semibold;
+    }
+  }
+
+  .el-dialog__body {
+    padding: $spacing-4;
+    color: $text-primary;
+  }
+
+  .el-dialog__footer {
+    border-top: 1px solid $border-primary;
+    padding: $spacing-3 $spacing-4;
+  }
+}
+
+.el-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+// ==================== 复选框组件 ====================
+
+.el-checkbox {
+  .el-checkbox__input.is-checked .el-checkbox__inner {
+    background-color: $primary-color;
+    border-color: $primary-color;
+  }
+
+  .el-checkbox__label {
+    color: $text-primary;
+  }
+}
+
+// ==================== 下拉菜单组件 ====================
+
+.el-dropdown {
+  .el-dropdown-menu {
+    background: $bg-card;
+    border: 1px solid $border-primary;
+    border-radius: $radius-md;
+    box-shadow: $shadow-lg;
+    padding: $spacing-2 0;
+
+    .el-dropdown-menu__item {
+      color: $text-primary;
+      padding: $spacing-3 $spacing-4;
+      border-radius: $radius-sm;
+      transition: all $duration-fast $ease-out;
+
+      &:hover {
+        background: $bg-hover;
+        color: $primary-color;
+      }
+
+      &.is-divided {
+        border-top: 1px solid $border-primary;
+        margin-top: $spacing-2;
+      }
+    }
+  }
+}
+
+// ==================== 头像组件 ====================
+
+.el-avatar {
+  background: $bg-tertiary;
+  color: $text-secondary;
+  border: 1px solid $border-primary;
+}
+
+// ==================== 表格组件 ====================
+
+.el-table {
+  background: $bg-card;
+  color: $text-primary;
+  border: 1px solid $border-primary;
+  border-radius: $radius-md;
+
+  th.el-table__cell {
+    background: $bg-secondary;
+    color: $text-secondary;
+    font-weight: $font-weight-semibold;
+    border-bottom: 1px solid $border-primary;
+  }
+
+  td.el-table__cell {
+    border-bottom: 1px solid $border-primary;
+  }
+
+  tr:hover > td {
+    background: $bg-hover;
+  }
+
+  .el-table__empty-block {
+    background: $bg-card;
+    color: $text-tertiary;
+  }
+}
+
+// ==================== 单选框组件 ====================
+
+.el-radio {
+  .el-radio__input.is-checked .el-radio__inner {
+    background-color: $primary-color;
+    border-color: $primary-color;
+  }
+
+  .el-radio__label {
+    color: $text-primary;
+  }
+}
+
+// ==================== 滚动条组件 ====================
+
+.el-scrollbar {
+  &__wrap {
+    background: $bg-secondary;
+  }
+
+  &__bar {
+    background: $bg-tertiary;
+
+    &:hover {
+      background: $bg-hover;
+    }
+  }
+}
+
+// ==================== 标签页组件 ====================
+
+.el-tabs {
+  .el-tabs__nav-wrap::after {
+    background: $border-primary;
+  }
+
+  .el-tabs__item {
+    color: $text-secondary;
+
+    &:hover {
+      color: $primary-color;
+    }
+
+    &.is-active {
+      color: $primary-color;
+      border-bottom-color: $primary-color;
+    }
+  }
+}
+
+// ==================== 消息提示组件 ====================
+
+.el-message {
+  background: $bg-card;
+  border: 1px solid $border-primary;
+  box-shadow: $shadow-lg;
+  border-radius: $radius-md;
+  color: $text-primary;
+  padding: $spacing-3 $spacing-4;
+
+  &.is-plain {
+    background: transparent;
+    border: 1px solid $border-primary;
+    box-shadow: $shadow-sm;
+  }
+
+  &--success {
+    border-color: $success-primary;
+    color: $success-primary;
+
+    &.is-plain {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: $success-primary;
+      color: $success-primary;
+    }
+  }
+
+  &--warning {
+    border-color: $warning-primary;
+    color: $warning-primary;
+
+    &.is-plain {
+      background: rgba(245, 158, 11, 0.1);
+      border-color: $warning-primary;
+      color: $warning-primary;
+    }
+  }
+
+  &--error {
+    border-color: $error-primary;
+    color: $error-primary;
+
+    &.is-plain {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: $error-primary;
+      color: $error-primary;
+    }
+  }
+
+  &--info {
+    border-color: $info-primary;
+    color: $info-primary;
+
+    &.is-plain {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: $info-primary;
+      color: $info-primary;
+    }
+  }
+
+  &__content {
+    color: inherit;
+  }
+}
+
+// ==================== 加载组件 ====================
+
+.el-loading-mask {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.el-loading-spinner {
+  .circular {
+    stroke: $primary-color;
+  }
+}
+
+// ==================== 分页组件 ====================
+
+.el-pagination {
+  .btn-prev,
+  .btn-next {
+    background: $bg-secondary;
+    color: $text-primary;
+    border: 1px solid $border-primary;
+
+    &:hover {
+      color: $primary-color;
+      border-color: $primary-color;
+    }
+
+    &:disabled {
+      background: $bg-tertiary;
+      color: $text-tertiary;
+    }
+  }
+
+  .el-pager li {
+    background: $bg-secondary;
+    color: $text-primary;
+    border: 1px solid $border-primary;
+
+    &:hover {
+      color: $primary-color;
+      border-color: $primary-color;
+    }
+
+    &.is-active {
+      background: $primary-color;
+      color: $text-primary;
+      border-color: $primary-color;
+    }
+  }
+}
+
+// ==================== Popconfirm组件 ====================
+
+.el-popconfirm {
+  background: $bg-card;
+  border: 1px solid $border-primary;
+  box-shadow: $shadow-lg;
+  border-radius: $radius-md;
+
+  .el-popconfirm__main {
+    color: $text-primary;
+  }
+
+  .el-button--primary {
+    background: $primary-color;
+    border-color: $primary-color;
+  }
+}
+
+// ==================== Tooltip组件 ====================
+
+.el-tooltip__popper {
+  background: $bg-tertiary;
+  color: $text-primary;
+  border: 1px solid $border-primary;
+  box-shadow: $shadow-md;
+}
+
+// ==================== Switch组件 ====================
+
+.el-switch {
+  &.is-checked {
+    .el-switch__core {
+      background: $primary-color;
+      border-color: $primary-color;
+    }
+  }
+
+  .el-switch__core {
+    background: $bg-tertiary;
+    border-color: $border-primary;
+  }
+}
+
+// ==================== Slider组件 ====================
+
+.el-slider {
+  .el-slider__runway {
+    background: $bg-tertiary;
+  }
+
+  .el-slider__bar {
+    background: $primary-color;
+  }
+
+  .el-slider__button {
+    border: 2px solid $primary-color;
+    background: $bg-card;
+  }
+}
+
+// ==================== DatePicker组件 ====================
+
+.el-picker-panel {
+  background: $bg-card;
+  border: 1px solid $border-primary;
+  box-shadow: $shadow-lg;
+
+  .el-date-picker__header-label {
+    color: $text-primary;
+  }
+
+  .el-date-table th {
+    color: $text-secondary;
+    border-bottom: 1px solid $border-primary;
+  }
+
+  .el-date-table td {
+    color: $text-primary;
+
+    &:hover {
+      background: $bg-hover;
+    }
+
+    &.available:hover {
+      color: $primary-color;
+    }
+
+    &.in-range {
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    &.start-date,
+    &.end-date {
+      background: $primary-color;
+      color: $text-primary;
+    }
+  }
+}
+
+// ==================== TimePicker组件 ====================
+
+.el-time-panel {
+  background: $bg-card;
+  border: 1px solid $border-primary;
+  box-shadow: $shadow-lg;
+
+  .el-time-spinner__item {
+    color: $text-primary;
+
+    &:hover:not(.disabled) {
+      background: $bg-hover;
+      color: $primary-color;
+    }
+
+    &.active:not(.disabled) {
+      background: $primary-color;
+      color: $text-primary;
+    }
+  }
+}
+
+// ==================== Upload组件 ====================
+
+.el-upload {
+  .el-upload-dragger {
+    background: $bg-secondary;
+    border: 2px dashed $border-primary;
+    border-radius: $radius-md;
+
+    &:hover {
+      border-color: $primary-color;
+      background: $bg-hover;
+    }
+  }
+
+  .el-upload-list {
+    background: $bg-card;
+    border: 1px solid $border-primary;
+    border-radius: $radius-md;
+  }
+}
+
+// ==================== Progress组件 ====================
+
+.el-progress {
+  .el-progress-bar__inner {
+    background: $primary-color;
+  }
+
+  &.is-success .el-progress-bar__inner {
+    background: $success-primary;
+  }
+
+  &.is-warning .el-progress-bar__inner {
+    background: $warning-primary;
+  }
+
+  &.is-exception .el-progress-bar__inner {
+    background: $error-primary;
+  }
+}
+
+// ==================== Badge组件 ====================
+
+.el-badge {
+  .el-badge__content {
+    background: $error-primary;
+    border-color: $error-primary;
+  }
+}
+
+// ==================== Tag组件 ====================
+
+.el-tag {
+  background: $bg-secondary;
+  border: 1px solid $border-primary;
+  color: $text-primary;
+
+  &--success {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: $success-primary;
+    color: $success-primary;
+  }
+
+  &--warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: $warning-primary;
+    color: $warning-primary;
+  }
+
+  &--danger {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: $error-primary;
+    color: $error-primary;
+  }
+
+  &--info {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: $info-primary;
+    color: $info-primary;
+  }
+}
+
+// ==================== Alert组件 ====================
+
+.el-alert {
+  background: $bg-secondary;
+  border: 1px solid $border-primary;
+  border-radius: $radius-md;
+
+  &--success {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: $success-primary;
+  }
+
+  &--warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: $warning-primary;
+  }
+
+  &--error {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: $error-primary;
+  }
+
+  &--info {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: $info-primary;
+  }
+}
+
+// ==================== Card组件 ====================
+
+.el-card {
+  background: $bg-card;
+  border: 1px solid $border-primary;
+  border-radius: $radius-md;
+  box-shadow: $shadow-sm;
+
+  .el-card__header {
+    border-bottom: 1px solid $border-primary;
+    color: $text-primary;
+    font-weight: $font-weight-semibold;
+  }
+
+  .el-card__body {
+    color: $text-primary;
+  }
+}
+
+// ==================== Drawer组件 ====================
+
+.el-drawer {
+  background: $bg-card;
+  border: 1px solid $border-primary;
+  box-shadow: $shadow-lg;
+
+  .el-drawer__header {
+    border-bottom: 1px solid $border-primary;
+    color: $text-primary;
+  }
+
+  .el-drawer__body {
+    color: $text-primary;
+  }
+}
+
+// ==================== Menu组件 ====================
+
+.el-menu {
+  background: $bg-secondary;
+  border: 1px solid $border-primary;
+
+  .el-menu-item {
+    color: $text-primary;
+
+    &:hover {
+      background: $bg-hover;
+      color: $primary-color;
+    }
+
+    &.is-active {
+      background: $primary-color;
+      color: $text-primary;
+    }
+  }
+}
+
+// ==================== Breadcrumb组件 ====================
+
+.el-breadcrumb {
+  .el-breadcrumb__item {
+    color: $text-secondary;
+
+    &:hover {
+      color: $primary-color;
+    }
+
+    &:last-child {
+      color: $text-primary;
+    }
+  }
+}
+
+// ==================== Steps组件 ====================
+
+.el-steps {
+  .el-step__head {
+    color: $text-tertiary;
+
+    &.is-process {
+      color: $primary-color;
+    }
+
+    &.is-finish {
+      color: $success-primary;
+    }
+  }
+
+  .el-step__title {
+    color: $text-primary;
+  }
+
+  .el-step__description {
+    color: $text-secondary;
+  }
+}
+
+// ==================== Rate组件 ====================
+
+.el-rate {
+  .el-rate__item {
+    color: $bg-tertiary;
+
+    &.hover {
+      transform: scale(1.1);
+    }
+  }
+
+  .el-rate__icon {
+    color: $text-tertiary;
+  }
+
+  .el-rate__icon.hover {
+    color: $primary-color;
+  }
+}
+
+// ==================== Transfer组件 ====================
+
+.el-transfer {
+  .el-transfer-panel {
+    background: $bg-card;
+    border: 1px solid $border-primary;
+    border-radius: $radius-md;
+  }
+
+  .el-transfer__buttons {
+    .el-button {
+      background: $bg-secondary;
+      border-color: $border-primary;
+      color: $text-primary;
+    }
+  }
+}
+
+// ==================== Tree组件 ====================
+
+.el-tree {
+  background: $bg-card;
+  color: $text-primary;
+
+  .el-tree-node__content {
+    &:hover {
+      background: $bg-hover;
+      color: $primary-color;
+    }
+  }
+
+  .el-tree-node__expand-icon {
+    color: $text-tertiary;
+  }
+
+  .el-tree-node__label {
+    color: $text-primary;
+  }
+}
+
+// ==================== Calendar组件 ====================
+
+.el-calendar {
+  background: $bg-card;
+  border: 1px solid $border-primary;
+  border-radius: $radius-md;
+
+  .el-calendar__header {
+    border-bottom: 1px solid $border-primary;
+    color: $text-primary;
+  }
+
+  .el-calendar-table th {
+    color: $text-secondary;
+    border-bottom: 1px solid $border-primary;
+  }
+
+  .el-calendar-table td {
+    color: $text-primary;
+    border: 1px solid $border-primary;
+
+    &:hover {
+      background: $bg-hover;
+    }
+
+    &.is-selected {
+      background: $primary-color;
+      color: $text-primary;
+    }
+  }
+}
+
+// ==================== Image组件 ====================
+
+.el-image {
+  background: $bg-secondary;
+  border: 1px solid $border-primary;
+  border-radius: $radius-md;
+}
+
+// ==================== Carousel组件 ====================
+
+.el-carousel {
+  .el-carousel__indicator {
+    .el-carousel__button {
+      background: $bg-tertiary;
+
+      &.is-active {
+        background: $primary-color;
+      }
+    }
+  }
+}
+
+// ==================== Timeline组件 ====================
+
+.el-timeline {
+  .el-timeline-item__timestamp {
+    color: $text-secondary;
+  }
+
+  .el-timeline-item__tail {
+    border-left: 2px solid $border-primary;
+  }
+
+  .el-timeline-item__node {
+    background: $bg-card;
+    border: 2px solid $border-primary;
+  }
+}
+
+// ==================== Backtop组件 ====================
+
+.el-backtop {
+  background: $bg-card;
+  border: 1px solid $border-primary;
+  color: $text-primary;
+  box-shadow: $shadow-md;
+
+  &:hover {
+    background: $primary-color;
+    color: $text-primary;
+  }
+}
+
+// ==================== Cascader组件 ====================
+
+.el-cascader {
+  .el-input__wrapper {
+    background: $bg-secondary;
+    border-color: $border-primary;
+  }
+
+  .el-cascader-menu {
+    background: $bg-card;
+    border: 1px solid $border-primary;
+    box-shadow: $shadow-lg;
+
+    .el-cascader-node {
+      color: $text-primary;
+
+      &:hover {
+        background: $bg-hover;
+        color: $primary-color;
+      }
+
+      &.is-active {
+        background: $primary-color;
+        color: $text-primary;
+      }
+    }
+  }
+}
+
+// ==================== ColorPicker组件 ====================
+
+.el-color-picker {
+  background: $bg-card;
+  border: 1px solid $border-primary;
+  border-radius: $radius-md;
+}
+
+// ==================== Collapse组件 ====================
+
+.el-collapse {
+  background: $bg-card;
+  border: 1px solid $border-primary;
+  border-radius: $radius-md;
+
+  .el-collapse-item__header {
+    color: $text-primary;
+    border-bottom: 1px solid $border-primary;
+
+    &:hover {
+      background: $bg-hover;
+      color: $primary-color;
+    }
+  }
+
+  .el-collapse-item__wrap {
+    background: $bg-secondary;
+    color: $text-primary;
+  }
+}
+
+// ==================== Divider组件 ====================
+
+.el-divider {
+  background: $border-primary;
+  color: $text-secondary;
+}
+
+// ==================== Empty组件 ====================
+
+.el-empty {
+  color: $text-tertiary;
+
+  .el-empty__description {
+    color: $text-secondary;
+  }
+}
+
+// ==================== Result组件 ====================
+
+.el-result {
+  color: $text-primary;
+
+  .el-result__title {
+    color: $text-primary;
+  }
+
+  .el-result__subtitle {
+    color: $text-secondary;
+  }
+}
+
+// ==================== Descriptions组件 ====================
+
+.el-descriptions {
+  background: $bg-card;
+  border: 1px solid $border-primary;
+
+  .el-descriptions__label {
+    color: $text-secondary;
+    background: $bg-secondary;
+  }
+
+  .el-descriptions__body {
+    color: $text-primary;
+  }
+}
+
+// ==================== Statistic组件 ====================
+
+.el-statistic {
+  .el-statistic__head {
+    color: $text-secondary;
+  }
+
+  .el-statistic__content {
+    color: $text-primary;
+  }
+}
+
+// ==================== Skeleton组件 ====================
+
+.el-skeleton {
+  background: $bg-card;
+
+  .el-skeleton__item {
+    background: $bg-tertiary;
+  }
+}
+
+// ==================== Popover组件 ====================
+
+.el-popover {
+  background: $bg-card;
+  border: 1px solid $border-primary;
+  box-shadow: $shadow-lg;
+  color: $text-primary;
+}
+
+// ==================== Popper组件 ====================
+
+.el-popper {
+  background: $bg-card;
+  border: 1px solid $border-primary;
+  box-shadow: $shadow-lg;
+  color: $text-primary;
+  border-radius: $radius-md;
+  padding: $spacing-3;
+
+  &.is-light {
+    background: $bg-card;
+    border: 1px solid $border-primary;
+    color: $text-primary;
+  }
+
+  &.is-dark {
+    background: $bg-tertiary;
+    border: 1px solid $border-primary;
+    color: $text-primary;
+  }
+
+  &[data-popper-placement^='top'] {
+    margin-bottom: $spacing-2;
+  }
+
+  &[data-popper-placement^='bottom'] {
+    margin-top: $spacing-2;
+  }
+
+  &[data-popper-placement^='left'] {
+    margin-right: $spacing-2;
+  }
+
+  &[data-popper-placement^='right'] {
+    margin-left: $spacing-2;
+  }
+}
+
+// ==================== Notification组件 ====================
+
+.el-notification {
+  background: $bg-card;
+  border: 1px solid $border-primary;
+  box-shadow: $shadow-lg;
+  border-radius: $radius-md;
+  color: $text-primary;
+}
+
+// ==================== 全局滚动条样式 ====================
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: $bg-secondary;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $bg-tertiary;
+  border-radius: $radius-full;
+
+  &:hover {
+    background: $bg-hover;
+  }
+}
+
+// ==================== 全局选择样式 ====================
+
+::selection {
+  background: rgba(139, 92, 246, 0.3);
+  color: $text-primary;
+}
+
+// ==================== 全局焦点样式 ====================
+
+:focus-visible {
+  outline: 2px solid $primary-color;
+  outline-offset: 2px;
+}
