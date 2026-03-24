@@ -19,8 +19,11 @@ services:
       - "3000:3000"
     volumes:
       - ./backend/uploads:/app/uploads
-      - ./backend/database.sqlite:/app/database.sqlite
+      - db_data:/app/data
     environment:
       - PORT=3000
       - JWT_SECRET=your-secret-key-change-in-production
     restart: unless-stopped
+
+volumes:
+  db_data:

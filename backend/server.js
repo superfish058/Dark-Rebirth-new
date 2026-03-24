@@ -24,7 +24,7 @@ if (!fs.existsSync(uploadsDir)) {
 }
 app.use('/uploads', express.static(uploadsDir));
 
-const db = new sqlite3.Database('./database.sqlite');
+const db = new sqlite3.Database('./data/database.sqlite');
 
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS users (

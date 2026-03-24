@@ -14,7 +14,7 @@ RUN npm install --registry=https://registry.npmmirror.com
 
 # 复制代码
 COPY . .
-RUN mkdir -p uploads
+RUN mkdir -p uploads data
 
 EXPOSE 3000
 CMD ["npm", "start"]
