@@ -7,7 +7,7 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 # 安装依赖
 COPY package*.json ./
 COPY package-lock.json ./
-RUN npm ci --no-audit --progress=false --registry=https://registry.npmmirror.com
+RUN npm install --registry=https://registry.npmmirror.com
 
 # 复制代码
 COPY . .
