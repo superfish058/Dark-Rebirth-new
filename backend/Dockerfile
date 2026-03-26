@@ -14,6 +14,9 @@ ENV NPM_CONFIG_DISABLE_SPAWN=true
 ENV NPM_CONFIG_AUDIT=false
 ENV NPM_CONFIG_UPDATE_NOTIFIER=false
 
+# 设置sqlite3二进制文件镜像源（加速GitHub下载）
+ENV SQLITE_BINARY_SITE=https://npmmirror.com/mirrors/sqlite3
+
 # 安装依赖
 COPY package*.json ./
 COPY package-lock.json ./
