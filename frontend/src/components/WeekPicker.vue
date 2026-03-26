@@ -8,19 +8,31 @@
       </div>
       
       <div class="week-picker-body">
-        <div class="year-selector">
-          <button class="year-nav-btn" @click="previousYear">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <span class="year-display">{{ selectedYear }}年</span>
-          <button class="year-nav-btn" @click="nextYear">
-            <i class="fas fa-chevron-right"></i>
-          </button>
+        <div class="year-month-selector">
+          <div class="year-selector">
+            <button class="year-nav-btn" @click="previousYear">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <span class="year-display">{{ selectedYear }}年</span>
+            <button class="year-nav-btn" @click="nextYear">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+          
+          <div class="month-selector">
+            <button class="month-nav-btn" @click="previousMonth">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <span class="month-display">{{ monthNames[selectedMonth] }}</span>
+            <button class="month-nav-btn" @click="nextMonth">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
         </div>
         
         <div class="weeks-grid">
           <div 
-            v-for="week in weeksInYear" 
+            v-for="week in weeksInMonth" 
             :key="week.weekNumber"
             class="week-item"
             :class="{ 
@@ -54,7 +66,10 @@ const props = defineProps({
 
 const emit = defineEmits(['update:visible', 'confirm', 'cancel'])
 
+const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
+
 const selectedYear = ref(props.modelValue ? props.modelValue.getFullYear() : new Date().getFullYear())
+const selectedMonth = ref(props.modelValue ? props.modelValue.getMonth() : new Date().getMonth())
 const selectedWeekStart = ref(props.modelValue ? getWeekStart(props.modelValue) : getWeekStart(new Date()))
 
 function getWeekStart(date) {
@@ -74,41 +89,45 @@ function formatDate(date) {
   return `${date.getMonth() + 1}/${date.getDate()}`
 }
 
-const weeksInYear = computed(() => {
+const weeksInMonth = computed(() => {
   const weeks = []
   const year = selectedYear.value
+  const month = selectedMonth.value
   
-  let currentDate = new Date(year, 0, 1)
-  const day = currentDate.getDay()
-  const diff = currentDate.getDate() - day + (day === 0 ? -6 : 1)
-  currentDate = new Date(currentDate.setDate(diff))
+  // 计算该月的第一天
+  const firstDayOfMonth = new Date(year, month, 1)
+  // 计算该月的最后一天
+  const lastDayOfMonth = new Date(year, month + 1, 0)
   
-  if (currentDate.getFullYear() > year) {
-    currentDate.setDate(currentDate.getDate() - 7)
-  }
+  // 找到该月第一周的开始日期
+  let currentDate = getWeekStart(firstDayOfMonth)
   
   while (true) {
     const weekStart = new Date(currentDate)
     const weekEnd = new Date(currentDate)
     weekEnd.setDate(weekStart.getDate() + 6)
     
-    if (weekStart.getFullYear() > year || (weekStart.getFullYear() === year && weekEnd.getFullYear() > year && weekStart.getMonth() === 11)) {
+    // 如果周的开始日期已经超过了该月的最后一天，则停止
+    if (weekStart > lastDayOfMonth) {
       break
     }
     
-    const weekNumber = getWeekNumber(weekStart)
-    const dateRange = `${formatDate(weekStart)} - ${formatDate(weekEnd)}`
-    
-    weeks.push({
-      weekNumber,
-      dateRange,
-      startDate: new Date(weekStart),
-      endDate: new Date(weekEnd)
-    })
+    // 只添加与当前月份有交集的周
+    if (weekStart <= lastDayOfMonth && weekEnd >= firstDayOfMonth) {
+      const weekNumber = getWeekNumber(weekStart)
+      const dateRange = `${formatDate(weekStart)} - ${formatDate(weekEnd)}`
+      
+      weeks.push({
+        weekNumber,
+        dateRange,
+        startDate: new Date(weekStart),
+        endDate: new Date(weekEnd)
+      })
+    }
     
     currentDate.setDate(currentDate.getDate() + 7)
     
-    if (weeks.length > 60) break
+    if (weeks.length > 10) break
   }
   
   return weeks
@@ -117,6 +136,7 @@ const weeksInYear = computed(() => {
 watch(() => props.modelValue, (newVal) => {
   if (newVal) {
     selectedYear.value = newVal.getFullYear()
+    selectedMonth.value = newVal.getMonth()
     selectedWeekStart.value = getWeekStart(newVal)
   }
 }, { immediate: true })
@@ -129,8 +149,27 @@ function nextYear() {
   selectedYear.value++
 }
 
+function previousMonth() {
+  selectedMonth.value--
+  if (selectedMonth.value < 0) {
+    selectedMonth.value = 11
+    selectedYear.value--
+  }
+}
+
+function nextMonth() {
+  selectedMonth.value++
+  if (selectedMonth.value > 11) {
+    selectedMonth.value = 0
+    selectedYear.value++
+  }
+}
+
 function selectWeek(week) {
   selectedWeekStart.value = new Date(week.startDate)
+  // 更新选中的月份为周所在的月份
+  selectedMonth.value = week.startDate.getMonth()
+  selectedYear.value = week.startDate.getFullYear()
 }
 
 function isSelectedWeek(week) {
@@ -220,19 +259,29 @@ function handleCancel() {
   flex: 1;
 }
 
-.year-selector {
+.year-month-selector {
   display: flex;
-  justify-content: center;
+  flex-direction: row;
+  justify-content: space-around;
   align-items: center;
-  gap: 20px;
   margin-bottom: 16px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--border, #E8D9CC);
 }
 
-.year-nav-btn {
-  width: 36px;
-  height: 36px;
+.year-selector,
+.month-selector {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+}
+
+.year-nav-btn,
+.month-nav-btn {
+  width: 32px;
+  height: 32px;
   border: 2px solid var(--border, #E8D9CC);
   border-radius: 50%;
   background: white;
@@ -244,18 +293,25 @@ function handleCancel() {
   transition: all 0.2s;
 }
 
-.year-nav-btn:hover {
+.year-nav-btn:hover,
+.month-nav-btn:hover {
   border-color: var(--primary, #FF8B6A);
   color: var(--primary, #FF8B6A);
   background: var(--bg-secondary, #FFEFE5);
 }
 
-.year-display {
-  font-size: 18px;
+.year-display,
+.month-display {
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-primary, #5C4B3E);
   min-width: 80px;
   text-align: center;
+  font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
+}
+
+.month-display {
+  min-width: 80px;
 }
 
 .weeks-grid {

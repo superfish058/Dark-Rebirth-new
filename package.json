@@ -1,0 +1,24 @@
+{
+  "name": "dark-rebirth",
+  "version": "1.0.0",
+  "description": "一个采用手绘风格设计的日常任务管理全栈 Web 应用。",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"cd frontend && npm run dev\" \"cd backend && npm run start\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/superfish058/Dark-Rebirth-new.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/superfish058/Dark-Rebirth-new/issues"
+  },
+  "homepage": "https://github.com/superfish058/Dark-Rebirth-new#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

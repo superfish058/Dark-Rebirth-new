@@ -71,7 +71,7 @@
         </div>
       </div>
 
-      <div v-if="totalPlans === 0 && incompleteHistoryPlans.length === 0" class="empty-state">
+      <div v-if="totalPlans === 0 && incompleteHistoryPlans.length === 0 && viewMode === 'day'" class="empty-state">
         <div class="empty-icon">📝</div>
         <p>今天还没有计划</p>
         <p class="empty-hint">点击下方按钮添加你的第一个计划吧！</p>
@@ -1292,6 +1292,7 @@
   @media (max-width: 768px) {
     .progress-nav-container {
       flex-direction: column;
+      height: auto;
     }
 
     .view-toggle-container {
