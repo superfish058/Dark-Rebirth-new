@@ -24,6 +24,12 @@ if (!fs.existsSync(uploadsDir)) {
 }
 app.use('/uploads', express.static(uploadsDir));
 
+function getBeijingDateTime() {
+  const now = new Date();
+  const beijingOffset = 8 * 60 * 60000;
+  return new Date(now.getTime() + beijingOffset).toISOString().replace('T', ' ').substring(0, 19);
+}
+
 const db = new sqlite3.Database('./data/database.sqlite');
 
 db.serialize(() => {
@@ -100,9 +106,10 @@ app.post('/api/register', (req, res) => {
   }
 
   const hashedPassword = bcrypt.hashSync(password, 10);
+  const beijingTime = getBeijingDateTime();
   
-  db.run('INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-    [username, email, hashedPassword],
+  db.run('INSERT INTO users (username, email, password, created_at) VALUES (?, ?, ?, ?)',
+    [username, email, hashedPassword, beijingTime],
     function(err) {
       if (err) {
         return res.status(400).json({ error: '用户名或邮箱已存在' });
@@ -165,10 +172,52 @@ app.post('/api/avatar/upload', authenticateToken, upload.single('avatar'), (req,
 });
 
 app.get('/api/plans/today', authenticateToken, (req, res) => {
-  const today = new Date().toISOString().split('T')[0];
+  const now = new Date();
+  const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
   
-  db.all('SELECT * FROM plans WHERE user_id = ? AND date = ? ORDER BY created_at DESC',
-    [req.user.userId, today], (err, plans) => {
+  db.all('SELECT * FROM plans WHERE user_id = ? AND date = ? ORDER BY created_at ASC',
+    [req.user.userId, localDate], (err, plans) => {
+      if (err) {
+        return res.status(500).json({ error: '获取计划失败' });
+      }
+      res.json(plans);
+    }
+  );
+});
+
+app.get('/api/incomplete-plans', authenticateToken, (req, res) => {
+  db.all('SELECT * FROM plans WHERE user_id = ? AND completed = 0 ORDER BY date ASC, created_at ASC',
+    [req.user.userId], (err, plans) => {
+      if (err) {
+        return res.status(500).json({ error: '获取未完成计划失败' });
+      }
+      res.json(plans);
+    }
+  );
+});
+
+app.get('/api/plans/date/:date', authenticateToken, (req, res) => {
+  const date = req.params.date;
+  
+  db.all('SELECT * FROM plans WHERE user_id = ? AND date = ? ORDER BY created_at ASC',
+    [req.user.userId, date], (err, plans) => {
+      if (err) {
+        return res.status(500).json({ error: '获取计划失败' });
+      }
+      res.json(plans);
+    }
+  );
+});
+
+app.get('/api/plans/week/:startDate', authenticateToken, (req, res) => {
+  const startDate = req.params.startDate;
+  const start = new Date(startDate);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  const endDate = end.toISOString().split('T')[0];
+  
+  db.all('SELECT * FROM plans WHERE user_id = ? AND date >= ? AND date <= ? ORDER BY date ASC, created_at ASC',
+    [req.user.userId, startDate, endDate], (err, plans) => {
       if (err) {
         return res.status(500).json({ error: '获取计划失败' });
       }
@@ -178,16 +227,18 @@ app.get('/api/plans/today', authenticateToken, (req, res) => {
 });
 
 app.post('/api/plans', authenticateToken, (req, res) => {
-  const { content } = req.body;
-  const today = new Date().toISOString().split('T')[0];
+  const { content, date } = req.body;
+  const now = new Date();
+  const localDate = date || new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+  const beijingTime = getBeijingDateTime();
   
-  db.run('INSERT INTO plans (user_id, content, date) VALUES (?, ?, ?)',
-    [req.user.userId, content, today],
+  db.run('INSERT INTO plans (user_id, content, date, created_at) VALUES (?, ?, ?, ?)',
+    [req.user.userId, content, localDate, beijingTime],
     function(err) {
       if (err) {
         return res.status(500).json({ error: '创建计划失败' });
       }
-      res.json({ id: this.lastID, content, completed: 0, date: today });
+      res.json({ id: this.lastID, content, completed: 0, date: localDate, created_at: beijingTime });
     }
   );
 });

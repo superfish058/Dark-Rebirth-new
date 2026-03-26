@@ -71,8 +71,23 @@ export const useUserStore = defineStore('user', () => {
     return response.data
   }
 
-  async function createPlan(content) {
-    const response = await api.post('/plans', { content })
+  async function getPlansByDate(date) {
+    const response = await api.get(`/plans/date/${date}`)
+    return response.data
+  }
+
+  async function getPlansByWeek(startDate) {
+    const response = await api.get(`/plans/week/${startDate}`)
+    return response.data
+  }
+
+  async function getIncompletePlans() {
+    const response = await api.get('/incomplete-plans')
+    return response.data
+  }
+
+  async function createPlan(content, date = null) {
+    const response = await api.post('/plans', { content, date })
     return response.data
   }
 
@@ -100,6 +115,9 @@ export const useUserStore = defineStore('user', () => {
     logout,
     updateAvatar,
     getPlans,
+    getPlansByDate,
+    getPlansByWeek,
+    getIncompletePlans,
     createPlan,
     updatePlan,
     deletePlan,
