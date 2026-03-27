@@ -14,6 +14,7 @@
 ## 🛠️ 技术栈
 
 ### 后端
+
 - Node.js
 - Express
 - SQLite3
@@ -23,6 +24,7 @@
 - cors（跨域支持）
 
 ### 前端
+
 - Vue 3
 - Vite
 - Vue Router
@@ -32,28 +34,34 @@
 ## 🚀 快速开始
 
 ### 前置要求
+
 - Node.js 16 或更高版本
 - npm 或 yarn
 
 ### 安装与运行
 
 #### 1. 启动后端服务
+
 ```bash
 cd backend
 npm install
 npm start
 ```
-后端服务将在 http://localhost:3000 运行
+
+后端服务将在 <http://localhost:3000> 运行
 
 #### 2. 启动前端开发服务器
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-前端开发服务器将在 http://localhost:5173 运行
+
+前端开发服务器将在 <http://localhost:5173> 运行
 
 ### 构建生产版本
+
 ```bash
 cd frontend
 npm run build
@@ -86,13 +94,16 @@ Dark Rebirth/
 ## 🎨 设计特色
 
 ### 配色方案
+
 采用**温暖春日**配色方案：
+
 - 主色：柔和橙红 (#FF8B6A)
 - 辅助色：薄荷绿 (#7DD3A4)
 - 强调色：温暖黄 (#FFD97D)
 - 背景：米白底 (#FFF8F0)
 
 ### 手绘风格
+
 - 不规则圆角边框
 - 纸张纹理背景
 - 卡片轻微旋转效果
@@ -101,14 +112,17 @@ Dark Rebirth/
 ## 📝 API 接口
 
 ### 认证接口
+
 - `POST /api/register` - 用户注册
 - `POST /api/login` - 用户登录
 - `GET /api/user` - 获取当前用户信息
 
 ### 头像接口
+
 - `POST /api/avatar/upload` - 上传头像
 
 ### 计划接口
+
 - `GET /api/plans/today` - 获取当日计划
 - `POST /api/plans` - 创建计划
 - `PUT /api/plans/:id` - 更新计划
@@ -124,3 +138,5 @@ Dark Rebirth/
 ## 📄 许可证
 
 MIT License
+
+测试git
