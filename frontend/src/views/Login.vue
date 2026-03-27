@@ -1,8 +1,8 @@
 <template>
   <div class="login-container">
     <div class="login-card">
-      <h1 class="title">✨ 每日计划</h1>
-      <p class="subtitle">记录每一个美好的日子</p>
+      <h1 class="title">✨ 暗皇新生</h1>
+      <p class="subtitle">开启全新的旅程</p>
       
       <form @submit.prevent="handleLogin" class="login-form">
         <div class="form-group">
@@ -89,6 +89,11 @@ const initForm = () => {
 
 initForm()
 
+// 检测设备类型
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
+
 async function handleLogin() {
   loading.value = true
   error.value = ''
@@ -103,7 +108,12 @@ async function handleLogin() {
       localStorage.removeItem('rememberedUsername')
     }
     
-    router.push('/')
+    // 根据设备类型路由到不同视图
+    if (isMobileDevice()) {
+      router.push('/')
+    } else {
+      router.push('/desktop')
+    }
   } catch (err) {
     error.value = err.response?.data?.error || '登录失败，请重试'
   } finally {

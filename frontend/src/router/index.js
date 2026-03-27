@@ -3,6 +3,7 @@ import { useUserStore } from '../stores/user'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import Home from '../views/Home.vue'
+import DesktopView from '../views/desktop/DesktopView.vue'
 
 const routes = [
   {
@@ -21,6 +22,12 @@ const routes = [
     path: '/',
     name: 'Home',
     component: Home,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/desktop',
+    name: 'Desktop',
+    component: DesktopView,
     meta: { requiresAuth: true }
   }
 ]
