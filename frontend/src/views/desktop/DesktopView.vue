@@ -3,7 +3,10 @@
     <!-- 顶部区域 -->
     <header class="desktop-header">
       <div class="header-left">
-        <div class="logo">✨ 暗皇新生</div>
+        <div class="logo">
+          <img src="/logo.png" alt="Logo" class="logo-img" />
+          <span class="logo-text">Dark Rebirth</span>
+        </div>
       </div>
       <div class="header-right">
         <div class="user-info">
@@ -19,11 +22,21 @@
       <aside class="desktop-sidebar">
         <nav class="sidebar-nav">
           <div class="nav-item" :class="{ active: activeMenu === 'favorites' }" @click="setActiveMenu('favorites')">
-            <span class="nav-icon">⭐</span>
+            <span class="nav-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </span>
             <span class="nav-label">网页收藏</span>
           </div>
           <div class="nav-item" :class="{ active: activeMenu === 'apps' }" @click="setActiveMenu('apps')">
-            <span class="nav-icon">📱</span>
+            <span class="nav-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </span>
             <span class="nav-label">全部应用</span>
           </div>
         </nav>
@@ -75,14 +88,29 @@ function handleLogout() {
   align-items: center;
   padding: 0 24px;
   height: 64px;
-  background-color: #0ea5e9;
+  background-color: #0042a6;
   color: white;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .header-left .logo {
-  font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-weight: 700;
+}
+
+.logo-img {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+.logo-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
 }
 
 .header-right .user-info {
@@ -127,42 +155,80 @@ function handleLogout() {
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 24px;
+  padding: 14px 24px;
   cursor: pointer;
   transition: all 0.2s;
-  border-left: 3px solid transparent;
+  border-radius: 3px;
+  margin: 0 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #0042a6;
+  transform: scaleY(0);
+  transition: transform 0.2s ease;
 }
 
 .nav-item:hover {
-  background-color: #f1f5f9;
+  background-color: #f8fafc;
 }
 
 .nav-item.active {
-  background-color: #e0f2fe;
-  border-left-color: #0ea5e9;
-  color: #0ea5e9;
+  background-color: rgba(0, 66, 166, 0.08);
+  color: #0042a6;
   font-weight: 500;
 }
 
+.nav-item.active::before {
+  transform: scaleY(1);
+}
+
 .nav-icon {
-  font-size: 18px;
+  font-size: 20px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  background: rgba(0, 66, 166, 0.1);
+  color: #0042a6;
+  transition: all 0.2s;
+}
+
+.nav-item.active .nav-icon {
+  background: #0042a6;
+  color: white;
 }
 
 .nav-label {
   font-size: 14px;
+  font-weight: 400;
+  transition: all 0.2s;
+}
+
+.nav-item.active .nav-label {
+  font-weight: 600;
 }
 
 /* 右侧路由展示区域 */
 .desktop-content {
   flex: 1;
-  padding: 24px;
+  padding: 16px;
   overflow-y: auto;
   background-color: #f8fafc;
 }
