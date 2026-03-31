@@ -9,7 +9,8 @@ if (!fs.existsSync(dataDir)) {
 }
 
 // 数据库连接
-const db = new sqlite3.Database('./data/database.sqlite');
+const dbPath = path.join(dataDir, 'database.sqlite');
+const db = new sqlite3.Database(dbPath);
 
 // 初始化数据库表
 db.serialize(() => {
