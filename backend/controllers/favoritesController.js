@@ -28,6 +28,7 @@ const getFavorites = (req, res) => {
               websites: websites.map(website => ({
                 ...website,
                 customIcon: website.custom_icon === 1,
+                useOnlineIcon: website.use_online_icon === 1,
                 iconColor: website.icon_color
               }))
             });
@@ -48,6 +49,7 @@ const getFavorites = (req, res) => {
             websites: websites.map(website => ({
               ...website,
               customIcon: website.custom_icon === 1,
+              useOnlineIcon: website.use_online_icon === 1,
               iconColor: website.icon_color
             }))
           });
@@ -105,10 +107,15 @@ const createCategory = (req, res) => {
 
 // 创建网站
 const createWebsite = (req, res) => {
-  let { categoryId, name, url, description, icon, customIcon, iconColor } = req.body;
+  let { categoryId, name, url, description, icon, customIcon, useOnlineIcon, iconColor } = req.body;
 
   if (!name || !url) {
     return res.status(400).json({ error: '名称和 URL 不能为空' });
+  }
+  
+  // 确保 useOnlineIcon 有默认值
+  if (useOnlineIcon === undefined) {
+    useOnlineIcon = false;
   }
   
   // 处理 categoryId 为空字符串或 '0' 或 null 的情况，使用默认值 999
@@ -126,24 +133,98 @@ const createWebsite = (req, res) => {
         return res.status(404).json({ error: '分类不存在' });
       }
       
-      // 如果没有传递 icon 且不是自定义图标，生成网站图标
-      if (!icon && !customIcon) {
+      // 如果没有传递 icon 且不是自定义图标且不是使用在线图标，生成网站图标
+      if (!icon && !customIcon && !useOnlineIcon) {
         try {
           const domain = new URL(url).hostname;
-          // 使用多种图标源，提高图标获取成功率
-          icon = `https://api.faviconkit.com/${domain}/64`;
+          // 使用网站自身的favicon
+          icon = `https://${domain}/favicon.ico`;
         } catch (error) {
           icon = null;
         }
       }
       
-      db.run('INSERT INTO websites (user_id, category_id, name, url, description, icon, custom_icon, icon_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [req.user.userId, categoryId, name, url, description || '', icon, customIcon ? 1 : 0, iconColor],
+      // 尝试使用包含use_online_icon字段的SQL语句
+      db.run('INSERT INTO websites (user_id, category_id, name, url, description, icon, custom_icon, use_online_icon, icon_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [req.user.userId, categoryId, name, url, description || '', icon, customIcon ? 1 : 0, useOnlineIcon ? 1 : 0, iconColor],
         function(err) {
           if (err) {
-            console.error('创建网站失败:', err);
-            return res.status(500).json({ error: '创建网站失败' });
+            // 如果失败，尝试使用不包含use_online_icon字段的SQL语句
+            console.error('创建网站失败，尝试不包含use_online_icon字段:', err);
+            db.run('INSERT INTO websites (user_id, category_id, name, url, description, icon, custom_icon, icon_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+              [req.user.userId, categoryId, name, url, description || '', icon, customIcon ? 1 : 0, iconColor],
+              function(err) {
+                if (err) {
+                  console.error('创建网站失败:', err);
+                  return res.status(500).json({ error: '创建网站失败' });
+                }
+                res.json({
+                  id: this.lastID,
+                  name,
+                  url,
+                  description: description || '',
+                  icon,
+                  customIcon,
+                  useOnlineIcon,
+                  iconColor
+                });
+              }
+            );
+          } else {
+            res.json({
+              id: this.lastID,
+              name,
+              url,
+              description: description || '',
+              icon,
+              customIcon,
+              useOnlineIcon,
+              iconColor
+            });
           }
+        }
+      );
+    });
+  } else {
+    // categoryId 为 999，创建默认分类的网站
+    // 如果没有传递 icon 且不是自定义图标且不是使用在线图标，生成网站图标
+    if (!icon && !customIcon && !useOnlineIcon) {
+      try {
+        const domain = new URL(url).hostname;
+        // 使用网站自身的favicon
+        icon = `https://${domain}/favicon.ico`;
+      } catch (error) {
+        icon = null;
+      }
+    }
+    
+    // 尝试使用包含use_online_icon字段的SQL语句
+    db.run('INSERT INTO websites (user_id, category_id, name, url, description, icon, custom_icon, use_online_icon, icon_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [req.user.userId, 999, name, url, description || '', icon, customIcon ? 1 : 0, useOnlineIcon ? 1 : 0, iconColor],
+      function(err) {
+        if (err) {
+          // 如果失败，尝试使用不包含use_online_icon字段的SQL语句
+          console.error('创建网站失败，尝试不包含use_online_icon字段:', err);
+          db.run('INSERT INTO websites (user_id, category_id, name, url, description, icon, custom_icon, icon_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [req.user.userId, 999, name, url, description || '', icon, customIcon ? 1 : 0, iconColor],
+            function(err) {
+              if (err) {
+                console.error('创建网站失败:', err);
+                return res.status(500).json({ error: '创建网站失败' });
+              }
+              res.json({
+                id: this.lastID,
+                name,
+                url,
+                description: description || '',
+                icon,
+                customIcon,
+                useOnlineIcon,
+                iconColor
+              });
+            }
+          );
+        } else {
           res.json({
             id: this.lastID,
             name,
@@ -151,40 +232,10 @@ const createWebsite = (req, res) => {
             description: description || '',
             icon,
             customIcon,
+            useOnlineIcon,
             iconColor
           });
         }
-      );
-    });
-  } else {
-    // categoryId 为 999，创建默认分类的网站
-    // 如果没有传递 icon 且不是自定义图标，生成网站图标
-    if (!icon && !customIcon) {
-      try {
-        const domain = new URL(url).hostname;
-        // 使用多种图标源，提高图标获取成功率
-        icon = `https://api.faviconkit.com/${domain}/64`;
-      } catch (error) {
-        icon = null;
-      }
-    }
-    
-    db.run('INSERT INTO websites (user_id, category_id, name, url, description, icon, custom_icon, icon_color) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [req.user.userId, 999, name, url, description || '', icon, customIcon ? 1 : 0, iconColor],
-      function(err) {
-        if (err) {
-          console.error('创建网站失败:', err);
-          return res.status(500).json({ error: '创建网站失败' });
-        }
-        res.json({
-          id: this.lastID,
-          name,
-          url,
-          description: description || '',
-          icon,
-          customIcon,
-          iconColor
-        });
       }
     );
   }
@@ -193,7 +244,7 @@ const createWebsite = (req, res) => {
 // 更新网站
 const updateWebsite = (req, res) => {
   const websiteId = req.params.id;
-  let { name, url, description, icon, customIcon, iconColor, categoryId } = req.body;
+  let { name, url, description, icon, customIcon, useOnlineIcon, iconColor, categoryId } = req.body;
   
   // 处理 categoryId 为空字符串或 '0' 或 null 的情况，使用默认值 999
   if (categoryId === '' || categoryId === '0' || categoryId === null) {
@@ -228,36 +279,56 @@ const updateWebsite = (req, res) => {
   
   function updateWebsiteData() {
     let finalIcon = icon;
-    if (!finalIcon && !customIcon) {
+    if (!finalIcon && !customIcon && !useOnlineIcon) {
       try {
         const domain = new URL(url).hostname;
-        // 使用多种图标源，提高图标获取成功率
-        finalIcon = `https://api.faviconkit.com/${domain}/64`;
+        // 使用网站自身的favicon
+        finalIcon = `https://${domain}/favicon.ico`;
       } catch (error) {
         finalIcon = null;
       }
-    } else if (customIcon) {
-      // 如果是自定义图标，将 icon 设置为 null
-      finalIcon = null;
     }
     
-    db.run('UPDATE websites SET name = ?, url = ?, description = ?, icon = ?, custom_icon = ?, icon_color = ?, category_id = ? WHERE id = ?',
-      [name, url, description || '', finalIcon, customIcon ? 1 : 0, iconColor, categoryId, websiteId],
+    // 尝试使用包含use_online_icon字段的SQL语句
+    db.run('UPDATE websites SET name = ?, url = ?, description = ?, icon = ?, custom_icon = ?, use_online_icon = ?, icon_color = ?, category_id = ? WHERE id = ?',
+      [name, url, description || '', finalIcon, customIcon ? 1 : 0, useOnlineIcon ? 1 : 0, iconColor, categoryId, websiteId],
       function(err) {
         if (err) {
-          console.error('更新网站失败:', err);
-          return res.status(500).json({ error: '更新网站失败' });
+          // 如果失败，尝试使用不包含use_online_icon字段的SQL语句
+          console.error('更新网站失败，尝试不包含use_online_icon字段:', err);
+          db.run('UPDATE websites SET name = ?, url = ?, description = ?, icon = ?, custom_icon = ?, icon_color = ?, category_id = ? WHERE id = ?',
+            [name, url, description || '', finalIcon, customIcon ? 1 : 0, iconColor, categoryId, websiteId],
+            function(err) {
+              if (err) {
+                console.error('更新网站失败:', err);
+                return res.status(500).json({ error: '更新网站失败' });
+              }
+              res.json({
+                id: websiteId,
+                name,
+                url,
+                description: description || '',
+                icon: finalIcon,
+                customIcon,
+                useOnlineIcon,
+                iconColor,
+                categoryId
+              });
+            }
+          );
+        } else {
+          res.json({
+            id: websiteId,
+            name,
+            url,
+            description: description || '',
+            icon: finalIcon,
+            customIcon,
+            useOnlineIcon,
+            iconColor,
+            categoryId
+          });
         }
-        res.json({
-          id: websiteId,
-          name,
-          url,
-          description: description || '',
-          icon: finalIcon,
-          customIcon,
-          iconColor,
-          categoryId
-        });
       }
     );
   }

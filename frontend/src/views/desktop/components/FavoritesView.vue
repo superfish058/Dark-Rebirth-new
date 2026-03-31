@@ -45,38 +45,40 @@
       <div v-else class="categories-container" :class="{ 'edit-mode': isEditMode }">
         <div v-for="category in categories" :key="category.id" class="category">
           <div class="category-header">
-            <h3 class="category-title" v-if="!editingCategory || editingCategory.id !== category.id">{{ category.name }}</h3>
-            <div v-else class="category-edit">
-              <input 
-                ref="categoryInput"
-                v-model="editingCategory.name" 
-                type="text" 
-                class="category-edit-input" 
-                @keyup.esc="cancelCategoryEdit"
-                @input="validateCategoryName"
-              />
-              <div v-if="categoryNameError" class="category-error">{{ categoryNameError }}</div>
-            </div>
-            <div v-if="isEditMode && (!editingCategory || editingCategory.id !== category.id) && category.id !== '0'" class="category-actions">
-              <button class="category-edit-btn" @click.stop="editCategory(category)">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-              </button>
-            </div>
-            <div v-else-if="isEditMode && editingCategory && editingCategory.id === category.id" class="category-actions">
-              <button class="category-save-btn" @click.stop="saveCategoryEdit">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-              </button>
-              <button class="category-cancel-btn" @click.stop="cancelCategoryEdit">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
+            <div class="category-title-container">
+              <h3 class="category-title" v-if="!editingCategory || editingCategory.id !== category.id">{{ category.name }}</h3>
+              <div v-else class="category-edit">
+                <input 
+                  ref="categoryInput"
+                  v-model="editingCategory.name" 
+                  type="text" 
+                  class="category-edit-input" 
+                  @keyup.esc="cancelCategoryEdit"
+                  @input="validateCategoryName"
+                />
+                <div v-if="categoryNameError" class="category-error">{{ categoryNameError }}</div>
+              </div>
+              <div v-if="isEditMode && (!editingCategory || editingCategory.id !== category.id) && category.id !== '0'" class="category-actions">
+                <button class="category-edit-btn" @click.stop="editCategory(category)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+              </div>
+              <div v-else-if="isEditMode && editingCategory && editingCategory.id === category.id" class="category-actions">
+                <button class="category-save-btn" @click.stop="saveCategoryEdit">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </button>
+                <button class="category-cancel-btn" @click.stop="cancelCategoryEdit">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
           <div class="websites-container">
@@ -183,13 +185,27 @@
                 </button>
               </div>
             </div>
-            <div class="form-group">
+            <div class="form-group icon-options">
               <label class="custom-checkbox">
-                <input type="checkbox" v-model="formData.customIcon" @change="updateIconPreview">
+                <input type="checkbox" v-model="formData.customIcon" @change="handleCustomIconChange">
                 <span class="checkbox-label">自定义图标</span>
               </label>
+              <label class="custom-checkbox">
+                <input type="checkbox" v-model="formData.useOnlineIcon" @change="handleOnlineIconChange">
+                <span class="checkbox-label">使用在线图标</span>
+              </label>
             </div>
-            <div v-if="formData.customIcon" class="form-group">
+            <div v-if="formData.useOnlineIcon" class="form-group">
+              <label for="onlineIconUrl">在线图标地址</label>
+              <input
+                id="onlineIconUrl"
+                v-model="formData.onlineIconUrl"
+                type="url"
+                placeholder="https://example.com/icon.png"
+                @input="updateIconPreview"
+              />
+            </div>
+            <div v-if="formData.customIcon && !formData.useOnlineIcon" class="form-group">
               <label for="iconColor">图标背景颜色</label>
               <div class="color-picker">
                 <input
@@ -313,6 +329,12 @@ onMounted(() => {
 
 // 切换编辑模式
 function toggleEditMode() {
+  if (isEditMode.value) {
+    // 退出编辑模式时，取消正在编辑的标签
+    if (editingCategory.value) {
+      cancelCategoryEdit()
+    }
+  }
   isEditMode.value = !isEditMode.value
 }
 
@@ -330,8 +352,10 @@ const formData = ref({
   description: '',
   icon: '',
   customIcon: false,
+  useOnlineIcon: false,
+  onlineIconUrl: '',
   iconColor: '#0042a6',
-  categoryId: ''
+  categoryId: '0'
 })
 
 // 监听分类变化，自动设置默认分类为默认值
@@ -383,12 +407,34 @@ function truncateUrl(url) {
   }
 }
 
+// 处理自定义图标勾选变化
+function handleCustomIconChange() {
+  if (formData.value.customIcon) {
+    formData.value.useOnlineIcon = false
+  }
+  updateIconPreview()
+}
+
+// 处理在线图标勾选变化
+function handleOnlineIconChange() {
+  if (formData.value.useOnlineIcon) {
+    formData.value.customIcon = false
+  }
+  updateIconPreview()
+}
+
 // 更新图标预览
 function updateIconPreview() {
-  if (!formData.value.customIcon && formData.value.url) {
+  if (!formData.value.customIcon && !formData.value.useOnlineIcon && formData.value.url) {
     const faviconUrl = generateFaviconUrl(formData.value.url)
     previewIcon.value = faviconUrl
     formData.value.icon = faviconUrl
+  } else if (formData.value.useOnlineIcon && formData.value.onlineIconUrl) {
+    previewIcon.value = formData.value.onlineIconUrl
+    formData.value.icon = formData.value.onlineIconUrl
+  } else if (formData.value.customIcon) {
+    // 选择自定义图标时，保持原有icon不变
+    previewIcon.value = null
   } else {
     previewIcon.value = null
     formData.value.icon = null
@@ -408,6 +454,8 @@ function editWebsite(website) {
     description: website.description,
     icon: website.icon,
     customIcon: website.customIcon || false,
+    useOnlineIcon: website.useOnlineIcon || false,
+    onlineIconUrl: website.icon ? website.icon : '',
     iconColor: website.iconColor || '#0042a6',
     categoryId: category ? category.id : '0' // 默认选择默认分类
   }
@@ -487,6 +535,8 @@ function resetForm() {
     description: '',
     icon: '',
     customIcon: false,
+    useOnlineIcon: false,
+    onlineIconUrl: '',
     iconColor: '#0042a6',
     categoryId: '0' // 默认选择默认分类
   }
@@ -698,6 +748,13 @@ async function saveCategoryEdit() {
   margin-bottom: 12px;
 }
 
+.category-title-container {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 8px;
+}
+
 .category-title {
   font-size: 16px;
   font-weight: 600;
@@ -734,7 +791,6 @@ async function saveCategoryEdit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 8px;
 }
 
 .category-edit-btn:hover {
@@ -753,7 +809,6 @@ async function saveCategoryEdit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 8px;
 }
 
 .category-cancel-btn:hover {
@@ -772,7 +827,6 @@ async function saveCategoryEdit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 8px;
 }
 
 .category-save-btn:hover {
@@ -783,6 +837,7 @@ async function saveCategoryEdit() {
 .category-actions {
   display: flex;
   align-items: center;
+  gap: 4px;
 }
 
 .category-error {
@@ -929,6 +984,12 @@ async function saveCategoryEdit() {
 
 
 
+.icon-options {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
 /* 自定义复选框 */
 .custom-checkbox {
   display: flex;
@@ -938,6 +999,7 @@ async function saveCategoryEdit() {
   font-size: 14px;
   font-weight: 500;
   color: #334155;
+  white-space: nowrap;
 }
 
 .custom-checkbox input[type="checkbox"] {
@@ -973,11 +1035,11 @@ async function saveCategoryEdit() {
   content: '';
   position: absolute;
   left: 7px;
-  top: 4px;
-  width: 4px;
-  height: 8px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
   border: solid white;
-  border-width: 0 1.5px 1.5px 0;
+  border-width: 0 2.5px 2.5px 0;
   transform: rotate(45deg);
 }
 

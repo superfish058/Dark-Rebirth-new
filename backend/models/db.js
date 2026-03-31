@@ -12,6 +12,52 @@ if (!fs.existsSync(dataDir)) {
 const dbPath = path.join(dataDir, 'database.sqlite');
 const db = new sqlite3.Database(dbPath);
 
+// 检查列是否存在
+function checkColumnExists(tableName, columnName, callback) {
+  db.all(`PRAGMA table_info(${tableName})`, (err, columns) => {
+    if (err) {
+      callback(err, false);
+      return;
+    }
+    const columnExists = columns.some(col => col.name === columnName);
+    callback(null, columnExists);
+  });
+}
+
+// 安全添加列
+function addColumnIfNotExists(tableName, columnDefinition, callback) {
+  // 从columnDefinition中提取列名
+  const columnNameMatch = columnDefinition.match(/^\s*(\w+)\s+/);
+  if (!columnNameMatch) {
+    if (callback) callback(new Error('Invalid column definition'), false);
+    return;
+  }
+  const columnName = columnNameMatch[1];
+  
+  checkColumnExists(tableName, columnName, (err, exists) => {
+    if (err) {
+      if (callback) callback(err, false);
+      return;
+    }
+    
+    if (!exists) {
+      const sql = `ALTER TABLE ${tableName} ADD COLUMN ${columnDefinition};`;
+      db.run(sql, (err) => {
+        if (err) {
+          console.error(`添加列 ${columnName} 到表 ${tableName} 失败:`, err);
+          if (callback) callback(err, false);
+        } else {
+          console.log(`成功添加列 ${columnName} 到表 ${tableName}`);
+          if (callback) callback(null, true);
+        }
+      });
+    } else {
+      console.log(`列 ${columnName} 在表 ${tableName} 中已存在`);
+      if (callback) callback(null, false);
+    }
+  });
+}
+
 // 初始化数据库表
 db.serialize(() => {
   // 用户表
@@ -59,6 +105,12 @@ db.serialize(() => {
     FOREIGN KEY (category_id) REFERENCES categories(id),
     FOREIGN KEY (user_id) REFERENCES users(id)
   )`);
+  
+  // 添加use_online_icon字段（如果不存在）
+  addColumnIfNotExists('websites', 'use_online_icon INTEGER DEFAULT 0');
+  
+  // 这里可以添加其他需要的列
+  // addColumnIfNotExists('websites', 'new_column TEXT DEFAULT NULL');
 });
 
 module.exports = db;
