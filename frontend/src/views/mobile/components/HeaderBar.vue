@@ -3,6 +3,7 @@
     <button v-if="showBack" class="back-btn" @click="goBack">
       <i class="fas fa-arrow-left"></i>
     </button>
+    <div v-else class="left-space"></div>
     <h1 class="page-title">{{ title }}</h1>
     <div class="right-space"></div>
   </div>
@@ -31,10 +32,6 @@
 
 <style scoped>
   .header-bar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
     height: 50px;
     background: white;
     border-bottom: 2px solid var(--border);
@@ -74,6 +71,7 @@
     text-align: center;
   }
 
+  .left-space,
   .right-space {
     width: 36px;
   }

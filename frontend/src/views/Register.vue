@@ -75,6 +75,11 @@ import { useUserStore } from '../stores/user'
 const router = useRouter()
 const userStore = useUserStore()
 
+// 检测设备类型
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
+
 const username = ref('')
 const email = ref('')
 const password = ref('')
@@ -93,7 +98,13 @@ async function handleRegister() {
   
   try {
     await userStore.register(username.value, email.value, password.value)
-    router.push('/')
+    
+    // 根据设备类型路由到不同视图
+    if (isMobileDevice()) {
+      router.push('/mobile')
+    } else {
+      router.push('/desktop')
+    }
   } catch (err) {
     error.value = err.response?.data?.error || '注册失败，请重试'
   } finally {

@@ -139,6 +139,47 @@ const toggleComplete = (req, res) => {
   );
 };
 
+// 获取计划统计信息
+const getPlanStats = (req, res) => {
+  // 获取全部计划数量
+  db.get('SELECT COUNT(*) as total FROM plans WHERE user_id = ?',
+    [req.user.userId], (err, totalResult) => {
+      if (err) {
+        return res.status(500).json({ error: '获取计划统计信息失败' });
+      }
+      
+      // 获取完成计划数量
+      db.get('SELECT COUNT(*) as completed FROM plans WHERE user_id = ? AND completed = 1',
+        [req.user.userId], (err, completedResult) => {
+          if (err) {
+            return res.status(500).json({ error: '获取计划统计信息失败' });
+          }
+          
+          // 获取今日计划数量
+          const now = new Date();
+          const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+          
+          db.get('SELECT COUNT(*) as today FROM plans WHERE user_id = ? AND date = ?',
+            [req.user.userId, localDate], (err, todayResult) => {
+              if (err) {
+                return res.status(500).json({ error: '获取计划统计信息失败' });
+              }
+              
+              // 计算未完成计划数量
+              const total = totalResult.total || 0;
+              const completed = completedResult.completed || 0;
+              const incomplete = total - completed;
+              const today = todayResult.today || 0;
+              
+              res.json({ total, completed, incomplete, today });
+            }
+          );
+        }
+      );
+    }
+  );
+};
+
 module.exports = {
   getTodayPlans,
   getIncompletePlans,
@@ -147,5 +188,6 @@ module.exports = {
   createPlan,
   updatePlan,
   deletePlan,
-  toggleComplete
+  toggleComplete,
+  getPlanStats
 };

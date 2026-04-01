@@ -31,5 +31,9 @@ export const plansAPI = {
   
   toggleComplete(id, completed) {
     return api.patch(`/plans/${id}/complete`, { completed })
+  },
+  
+  getPlanStats() {
+    return api.get('/plans/stats')
   }
 }

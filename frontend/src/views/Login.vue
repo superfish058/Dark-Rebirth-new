@@ -1,7 +1,7 @@
 <template>
   <div class="login-container">
     <div class="login-card">
-      <h1 class="title">✨ 暗皇新生</h1>
+      <h1 class="title">✨ 暗序新生</h1>
       <p class="subtitle">开启全新的旅程</p>
       
       <form @submit.prevent="handleLogin" class="login-form">
@@ -110,7 +110,7 @@ async function handleLogin() {
     
     // 根据设备类型路由到不同视图
     if (isMobileDevice()) {
-      router.push('/')
+      router.push('/mobile')
     } else {
       router.push('/desktop')
     }

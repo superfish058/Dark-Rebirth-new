@@ -86,6 +86,11 @@ export const useUserStore = defineStore('user', () => {
     return response.data
   }
 
+  async function getPlanStats() {
+    const response = await plansAPI.getPlanStats()
+    return response.data
+  }
+
   return {
     token,
     user,
@@ -101,6 +106,7 @@ export const useUserStore = defineStore('user', () => {
     createPlan,
     updatePlan,
     deletePlan,
-    toggleComplete
+    toggleComplete,
+    getPlanStats
   }
 })

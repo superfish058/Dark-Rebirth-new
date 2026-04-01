@@ -915,7 +915,7 @@ async function saveCategoryEdit() {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 6px;
+  padding: 2px;
 }
 
 .icon-placeholder {
@@ -1207,7 +1207,6 @@ async function saveCategoryEdit() {
 .close-btn:hover {
   background-color: #e2e8f0;
   color: #1e293b;
-  transform: rotate(90deg);
 }
 
 .dialog-body {
@@ -1338,8 +1337,9 @@ async function saveCategoryEdit() {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 12px;
+  padding: 8px;
 }
+
 
 .preview-placeholder {
   font-size: 36px;

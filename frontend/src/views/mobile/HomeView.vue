@@ -19,25 +19,25 @@
       <h3 class="section-title">计划概览</h3>
       <div class="overview-cards">
         <div class="overview-card">
-          <div class="card-icon">📝</div>
-          <div class="card-content">
-            <p class="card-value">{{ todayPlansCount }}</p>
-            <p class="card-label">今日计划</p>
+          <div class="card-top">
+            <div class="card-icon">🔄</div>
+            <p class="card-value">{{ planStats.incomplete }}</p>
           </div>
+          <p class="card-label">未完成计划</p>
         </div>
         <div class="overview-card">
-          <div class="card-icon">✅</div>
-          <div class="card-content">
-            <p class="card-value">{{ completedPlansCount }}</p>
-            <p class="card-label">已完成</p>
+          <div class="card-top">
+            <div class="card-icon">➕</div>
+            <p class="card-value">{{ planStats.today }}</p>
           </div>
+          <p class="card-label">今日新增计划</p>
         </div>
         <div class="overview-card">
-          <div class="card-icon">📊</div>
-          <div class="card-content">
-            <p class="card-value">{{ completionRate }}%</p>
-            <p class="card-label">完成率</p>
+          <div class="card-top">
+            <div class="card-icon">✅</div>
+            <p class="card-value">{{ planStats.completed }}</p>
           </div>
+          <p class="card-label">已完成计划</p>
         </div>
       </div>
     </div>
@@ -46,23 +46,27 @@
     <div class="quick-actions-section">
       <h3 class="section-title">快捷功能</h3>
       <div class="quick-actions-grid">
-        <div class="quick-action-item" @click="navigateTo('/mobile/plan')">
-          <div class="action-icon">📅</div>
-          <p class="action-label">计划执行</p>
+          <div class="quick-action-item" @click="navigateTo('/mobile/plan')">
+            <div class="action-icon">📅</div>
+            <p class="action-label">影途执记</p>
+          </div>
+          <div class="quick-action-item" @click="showAddPlanModal = true">
+            <div class="action-icon">➕</div>
+            <p class="action-label">添加计划</p>
+          </div>
+          <div class="quick-action-item" @click="navigateTo('/mobile/journal')">
+            <div class="action-icon">📝</div>
+            <p class="action-label">暗语随笔</p>
+          </div>
+          <div class="quick-action-item" @click="navigateTo('/mobile/apps')">
+            <div class="action-icon">📱</div>
+            <p class="action-label">应用中心</p>
+          </div>
+          <div class="quick-action-item" @click="navigateTo('/mobile/profile')">
+            <div class="action-icon">👤</div>
+            <p class="action-label">个人中心</p>
+          </div>
         </div>
-        <div class="quick-action-item" @click="showAddPlanModal = true">
-          <div class="action-icon">➕</div>
-          <p class="action-label">添加计划</p>
-        </div>
-        <div class="quick-action-item" @click="navigateTo('/mobile/apps')">
-          <div class="action-icon">📱</div>
-          <p class="action-label">应用中心</p>
-        </div>
-        <div class="quick-action-item" @click="navigateTo('/mobile/profile')">
-          <div class="action-icon">👤</div>
-          <p class="action-label">个人中心</p>
-        </div>
-      </div>
     </div>
 
     <!-- 待办提醒 -->
@@ -123,6 +127,7 @@ const addInput = ref(null)
 const todayPlans = ref([])
 const upcomingPlans = ref([])
 const recentActivities = ref([])
+const planStats = ref({ total: 0, completed: 0, incomplete: 0 })
 
 // 计算属性
 const todayPlansCount = computed(() => todayPlans.value.length)
@@ -179,6 +184,15 @@ function loadRecentActivities() {
   ]
 }
 
+async function loadPlanStats() {
+  try {
+    const stats = await userStore.getPlanStats()
+    planStats.value = stats
+  } catch (err) {
+    console.error('加载计划统计信息失败', err)
+  }
+}
+
 async function addPlan() {
   if (!newPlanContent.value.trim()) return
 
@@ -199,6 +213,7 @@ async function addPlan() {
 onMounted(async () => {
   await loadTodayPlans()
   await loadUpcomingPlans()
+  await loadPlanStats()
   loadRecentActivities()
 })
 
@@ -285,16 +300,25 @@ watch(showAddPlanModal, (val) => {
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  text-align: center;
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .card-icon {
-  font-size: 24px;
+  font-size: 20px;
+  flex-shrink: 0;
 }
 
 .card-content {
-  flex: 1;
+  width: 100%;
 }
 
 .card-value {
@@ -308,6 +332,8 @@ watch(showAddPlanModal, (val) => {
   margin: 4px 0 0;
   font-size: 12px;
   color: var(--text-secondary);
+  text-align: center;
+  width: 100%;
 }
 
 .quick-actions-section {
@@ -316,8 +342,8 @@ watch(showAddPlanModal, (val) => {
 
 .quick-actions-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
 }
 
 .quick-action-item {

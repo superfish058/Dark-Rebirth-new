@@ -319,12 +319,7 @@
     transform: rotate(-0.5deg);
   }
 
-  .upload-btn-hand-drawn:hover {
-    background: var(--primary);
-    color: white;
-    transform: rotate(0.5deg);
-    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
-  }
+
 
   .file-input {
     display: none;
@@ -384,10 +379,7 @@
     transition: all 0.2s;
   }
 
-  .function-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
+
 
   .function-icon {
     font-size: 24px;
@@ -489,10 +481,7 @@
     margin-bottom: 32px;
   }
 
-  .logout-button:hover {
-    background: var(--error);
-    color: white;
-  }
+
 
   .logout-message {
     text-align: center;

@@ -2,7 +2,9 @@
   <div class="mobile-layout">
     <HeaderBar :title="title" :show-back="showBack" />
     <main class="main-content">
-      <slot></slot>
+      <div class="content-wrapper">
+        <slot></slot>
+      </div>
     </main>
     <NavBar />
   </div>
@@ -26,12 +28,19 @@ const props = defineProps({
 
 <style scoped>
 .mobile-layout {
-  min-height: 100vh;
-  padding-top: 50px;
-  padding-bottom: 60px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .main-content {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
+
+.content-wrapper {
   padding: 16px;
+  height: 100%;
 }
 </style>

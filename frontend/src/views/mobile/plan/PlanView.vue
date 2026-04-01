@@ -1,33 +1,38 @@
 <template>
-  <MobileLayout title="计划执行" :show-back="false">
+  <MobileLayout title="影途执记" :show-back="false">
     <div class="home-container">
       <main class="main-content">
-      <div class="progress-nav-container">
-        <div class="view-toggle-container">
-          <div class="view-toggle">
-            <button class="toggle-btn" :class="{ active: viewMode === 'day' }" @click="viewMode = 'day'">
-              每日
-            </button>
-            <button class="toggle-btn" :class="{ active: viewMode === 'week' }" @click="viewMode = 'week'">
-              每周
-            </button>
-          </div>
+      <div class="date-display">
+        <h2 class="current-date">{{ formattedDate }}</h2>
+        <button class="date-picker-btn" @click="showDatePicker">
+          <i class="fas fa-calendar-alt"></i>
+        </button>
+      </div>
+      
+      <div class="overview-container">
+        <div class="view-toggle">
+          <button class="toggle-btn" :class="{ active: viewMode === 'day' }" @click="viewMode = 'day'">
+            每日
+          </button>
+          <button class="toggle-btn" :class="{ active: viewMode === 'week' }" @click="viewMode = 'week'">
+            每周
+          </button>
+        </div>
 
-          <div class="nav-buttons">
-            <button class="nav-btn" @click="navigatePrevious">
-              <i class="fas fa-chevron-left"></i>
-              {{ viewMode === 'day' ? '上一天' : '上一周' }}
-            </button>
-            <button class="nav-btn" @click="navigateNext">
-              {{ viewMode === 'day' ? '下一天' : '下一周' }}
-              <i class="fas fa-chevron-right"></i>
-            </button>
-          </div>
+        <div class="nav-buttons">
+          <button class="nav-btn" @click="navigatePrevious">
+            <i class="fas fa-chevron-left"></i>
+            {{ viewMode === 'day' ? '上一天' : '上一周' }}
+          </button>
+          <button class="nav-btn" @click="navigateNext">
+            {{ viewMode === 'day' ? '下一天' : '下一周' }}
+            <i class="fas fa-chevron-right"></i>
+          </button>
         </div>
 
         <div class="progress-section">
           <div class="progress-header">
-            <h3>计划执行情况</h3>
+            <h3>影途执记情况</h3>
             <span class="progress-info">{{ completedCount }}/{{ totalPlans }} 已完成 ({{ progressPercentage }}%)</span>
           </div>
           <div class="progress-bar">
@@ -110,9 +115,7 @@
               </div>
             </div>
           </div>
-          <div v-else class="empty-day-plans">
-            <p>当日无计划</p>
-          </div>
+
         </div>
 
         <div v-else class="week-view">
@@ -136,11 +139,11 @@
           </div>
         </div>
       </div>
-    </main>
 
-    <button v-if="viewMode === 'day'" class="fab-button" @click="showAddModal = true">
-      <i class="fas fa-plus"></i>
-    </button>
+      <button v-if="viewMode === 'day'" class="fab-button" @click="showAddModal = true">
+        <i class="fas fa-plus"></i>
+      </button>
+    </main>
 
     <Modal v-model:visible="showAddModal" title="添加新计划" size="large" @close="closeModal" @cancel="closeModal"
       @confirm="addPlan" :confirm-text="'添加'" :cancel-text="'取消'">
@@ -453,79 +456,60 @@
 
 <style scoped>
   .home-container {
-    min-height: 100vh;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
   }
-
-
 
   .main-content {
+    flex: 1;
     max-width: 900px;
     margin: 0 auto;
-    padding: 24px 20px;
+    width: 100%;
+    position: relative;
   }
 
-  .progress-nav-container {
-    display: flex;
-    gap: 16px;
-    align-items: stretch;
-    margin-bottom: 24px;
-    height: 80px;
-  }
-
-  .progress-section {
-    flex: 1;
-    padding: 16px;
-    background: white;
-    border-radius: 12px;
-    border: 2px solid var(--border);
-  }
-
-  .progress-header {
+  .date-display {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
   }
 
-  .progress-header h3 {
-    margin: 0;
+  .current-date {
     font-size: 18px;
+    font-weight: 600;
     color: var(--text-primary);
-    font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
+    margin: 0;
   }
 
-  .progress-info {
-    font-size: 14px;
-    color: var(--text-secondary);
-    font-weight: bold;
-  }
-
-  .progress-bar {
-    width: 100%;
-    height: 12px;
-    background: var(--bg-secondary);
-    border-radius: 6px;
-    overflow: hidden;
+  .date-picker-btn {
+    width: 40px;
+    height: 40px;
     border: 2px solid var(--border);
-  }
-
-  .progress-fill {
-    height: 100%;
-    background: var(--primary);
-    border-radius: 4px;
-    transition: width 0.5s ease;
-    box-shadow: 2px 0 0 rgba(0, 0, 0, 0.1);
-  }
-
-  .view-toggle-container {
+    border-radius: 8px;
+    background: white;
+    color: var(--text-primary);
+    cursor: pointer;
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-width: 160px;
-    flex-shrink: 0;
-    align-items: stretch;
-    justify-content: space-between;
-    height: 100%;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all 0.2s;
+  }
+
+  .date-picker-btn:hover {
+    border-color: var(--primary);
+    background: var(--bg-secondary);
+    color: var(--primary);
+  }
+
+  .overview-container {
+    background: white;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    padding: 16px;
+    margin-bottom: 24px;
   }
 
   .view-toggle {
@@ -536,6 +520,7 @@
     flex-wrap: nowrap;
     border: 2px solid var(--border);
     overflow: hidden;
+    margin-bottom: 12px;
   }
 
   .toggle-btn {
@@ -566,6 +551,7 @@
     flex-direction: row;
     gap: 6px;
     width: 100%;
+    margin-bottom: 16px;
   }
 
   .nav-btn {
@@ -596,6 +582,47 @@
 
   .nav-btn i {
     font-size: 12px;
+  }
+
+  .progress-section {
+    width: 100%;
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .progress-header h3 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--text-primary);
+    font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
+  }
+
+  .progress-info {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: bold;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 12px;
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    overflow: hidden;
+    border: 2px solid var(--border);
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+    box-shadow: 2px 0 0 rgba(0, 0, 0, 0.1);
   }
 
   .empty-state {
@@ -1021,10 +1048,6 @@
     padding: 16px 20px;
   }
 
-  .main-content {
-    padding: 20px;
-  }
-
   .upload-card {
     padding: 24px;
   }
@@ -1049,6 +1072,30 @@
     gap: 12px;
     justify-content: flex-end;
     margin-top: 20px;
+  }
+
+  .fab-button {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .fab-button:hover {
+    background: var(--primary-dark);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
   }
 
   @media (max-width: 768px) {

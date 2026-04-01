@@ -5,6 +5,11 @@ import Register from '../views/Register.vue'
 import Home from '../views/Home.vue'
 import DesktopView from '../views/desktop/DesktopView.vue'
 
+// 检测设备类型
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
+
 // 移动端路由
 const routes = [
   {
@@ -55,6 +60,12 @@ const routes = [
     name: 'MobilePlan',
     component: () => import('../views/mobile/plan/PlanView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/mobile/journal',
+    name: 'MobileJournal',
+    component: () => import('../views/mobile/journal/JournalView.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
@@ -69,7 +80,12 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {
     next('/login')
   } else if (to.meta.requiresGuest && userStore.isLoggedIn) {
-    next('/')
+    // 根据设备类型重定向到不同视图
+    if (isMobileDevice()) {
+      next('/mobile')
+    } else {
+      next('/desktop')
+    }
   } else {
     next()
   }

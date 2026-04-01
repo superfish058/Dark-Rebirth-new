@@ -62,7 +62,7 @@
 
         <div class="progress-section">
           <div class="progress-header">
-            <h3>计划执行情况</h3>
+            <h3>影途执记情况</h3>
             <span class="progress-info">{{ completedCount }}/{{ totalPlans }} 已完成 ({{ progressPercentage }}%)</span>
           </div>
           <div class="progress-bar">

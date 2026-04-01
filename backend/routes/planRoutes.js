@@ -27,4 +27,7 @@ router.delete('/plans/:id', authenticateToken, planController.deletePlan);
 // 切换计划完成状态
 router.patch('/plans/:id/complete', authenticateToken, planController.toggleComplete);
 
+// 获取计划统计信息
+router.get('/plans/stats', authenticateToken, planController.getPlanStats);
+
 module.exports = router;

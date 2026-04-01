@@ -47,10 +47,6 @@
 
 <style scoped>
   .nav-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
     height: 60px;
     background: white;
     border-top: 2px solid var(--border);
