@@ -11,7 +11,7 @@
         <slot></slot>
       </div>
       <div v-if="showActions" class="modal-actions">
-        <button v-if="showCancel" class="btn-hand-drawn btn-secondary" @click="handleCancel">
+        <button v-if="showCancel" class="btn-hand-drawn btn-cancel" @click="handleCancel">
           {{ cancelText }}
         </button>
         <button class="btn-hand-drawn" @click="handleConfirm" :disabled="loading">
@@ -98,11 +98,10 @@ function handleConfirm() {
 .modal-content {
   background: white;
   padding: 30px;
-  border-radius: 30px 4px 30px 4px;
+  border-radius: 12px;
   border: 3px solid var(--border);
   width: 100%;
   max-width: 400px;
-  transform: rotate(-0.5deg);
   box-shadow: 8px 8px 0 rgba(0,0,0,0.1);
   position: relative;
 }
@@ -133,7 +132,6 @@ function handleConfirm() {
   color: var(--text-primary);
   font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
   font-size: 20px;
-  transform: rotate(-0.5deg);
   flex: 1;
 }
 
@@ -181,5 +179,21 @@ function handleConfirm() {
   gap: 16px;
   justify-content: flex-end;
   margin-top: 8px;
+}
+
+.btn-hand-drawn {
+  border-radius: 8px;
+  transform: none;
+}
+
+.btn-hand-drawn:hover {
+  transform: scale(1.05);
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+}
+
+.btn-cancel {
+  background: white;
+  border-color: var(--text-primary);
+  color: var(--text-primary);
 }
 </style>

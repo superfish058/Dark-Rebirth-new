@@ -57,25 +57,15 @@
               class="plan-item history-plan">
               <div class="plan-number">{{ index + 1 }}</div>
               <input type="checkbox" :checked="plan.completed" @change="toggleComplete(plan)" class="plan-checkbox" />
-              <div v-if="editingPlanId === plan.id" class="edit-form">
-                <input v-model="editContent" type="text" class="input-hand-drawn edit-input"
-                  @keyup.enter="saveEdit(plan)" @keyup.escape="cancelEdit" ref="editInput" />
-              </div>
-              <div v-else class="plan-content">
+              <div class="plan-content">
                 <div class="plan-text">{{ plan.content }}</div>
                 <div class="plan-date-badge">{{ formatDateLabel(plan.date) }}</div>
               </div>
               <div class="plan-actions">
-                <button v-if="editingPlanId === plan.id" class="action-btn save-btn" @click="saveEdit(plan)">
-                  <i class="fas fa-check"></i>
-                </button>
-                <button v-else class="action-btn edit-btn" @click="startEdit(plan)">
+                <button class="action-btn edit-btn" @click="startEdit(plan)">
                   <i class="fas fa-edit"></i>
                 </button>
-                <button v-if="editingPlanId === plan.id" class="action-btn cancel-btn" @click="cancelEdit">
-                  <i class="fas fa-times"></i>
-                </button>
-                <button v-else class="action-btn delete-btn" @click="deletePlan(plan)">
+                <button class="action-btn delete-btn" @click="deletePlan(plan)">
                   <i class="fas fa-trash"></i>
                 </button>
                 <div class="completed-badge" v-if="plan.completed">已完成</div>
@@ -93,22 +83,12 @@
               :class="{ completed: plan.completed }">
               <div class="plan-number">{{ index + 1 }}</div>
               <input type="checkbox" :checked="plan.completed" @change="toggleComplete(plan)" class="plan-checkbox" />
-              <div v-if="editingPlanId === plan.id" class="edit-form">
-                <input v-model="editContent" type="text" class="input-hand-drawn edit-input"
-                  @keyup.enter="saveEdit(plan)" @keyup.escape="cancelEdit" ref="editInput" />
-              </div>
-              <div v-else class="plan-content">{{ plan.content }}</div>
+              <div class="plan-content">{{ plan.content }}</div>
               <div class="plan-actions">
-                <button v-if="editingPlanId === plan.id" class="action-btn save-btn" @click="saveEdit(plan)">
-                  <i class="fas fa-check"></i>
-                </button>
-                <button v-else class="action-btn edit-btn" @click="startEdit(plan)">
+                <button class="action-btn edit-btn" @click="startEdit(plan)">
                   <i class="fas fa-edit"></i>
                 </button>
-                <button v-if="editingPlanId === plan.id" class="action-btn cancel-btn" @click="cancelEdit">
-                  <i class="fas fa-times"></i>
-                </button>
-                <button v-else class="action-btn delete-btn" @click="deletePlan(plan)">
+                <button class="action-btn delete-btn" @click="deletePlan(plan)">
                   <i class="fas fa-trash"></i>
                 </button>
                 <div class="completed-badge" v-if="plan.completed">已完成</div>
@@ -147,8 +127,8 @@
 
     <Modal v-model:visible="showAddModal" title="添加新计划" size="large" @close="closeModal" @cancel="closeModal"
       @confirm="addPlan" :confirm-text="'添加'" :cancel-text="'取消'">
-      <input v-model="newPlanContent" type="text" class="input-hand-drawn add-plan-input" placeholder="写下你的计划..."
-        @keyup.enter="addPlan" ref="addInput" />
+      <textarea v-model="newPlanContent" class="input-hand-drawn add-plan-textarea" placeholder="写下你的计划..." rows="2"
+        @keyup.enter.ctrl="addPlan" ref="addInput"></textarea>
     </Modal>
 
 
@@ -156,6 +136,11 @@
     <Modal v-model:visible="showDeleteModal" title="删除计划" size="small" @close="cancelDelete" @cancel="cancelDelete"
       @confirm="confirmDelete" :confirm-text="'删除'" :cancel-text="'取消'">
       <p class="delete-message">确定要删除这个计划吗？</p>
+    </Modal>
+
+    <Modal v-model:visible="showEditModal" title="编辑计划" size="large" @close="cancelEdit" @cancel="cancelEdit"
+      @confirm="saveEdit" :confirm-text="'保存'" :cancel-text="'取消'">
+      <textarea v-model="editContent" class="input-hand-drawn edit-textarea" placeholder="编辑你的计划..." rows="2" ref="editTextarea"></textarea>
     </Modal>
 
     <DatePicker v-model:visible="showDatePickerModal" :model-value="currentDate" @confirm="handleDateSelect" />
@@ -187,7 +172,9 @@
   const editContent = ref('')
   const addInput = ref(null)
   const editInput = ref(null)
+  const editTextarea = ref(null)
   const showDeleteModal = ref(false)
+  const showEditModal = ref(false)
   const currentPlan = ref(null)
   const showDatePickerModal = ref(false)
   const showWeekPickerModal = ref(false)
@@ -371,28 +358,32 @@
   }
 
   function startEdit(plan) {
-    editingPlanId.value = plan.id
+    currentPlan.value = plan
     editContent.value = plan.content
+    showEditModal.value = true
     nextTick(() => {
-      editInput.value?.focus()
+      editTextarea.value?.focus()
     })
   }
 
-  async function saveEdit(plan) {
-    if (!editContent.value.trim()) return
+  async function saveEdit() {
+    if (!editContent.value.trim() || !currentPlan.value) return
 
     try {
-      await userStore.updatePlan(plan.id, editContent.value)
-      plan.content = editContent.value
-      editingPlanId.value = null
+      await userStore.updatePlan(currentPlan.value.id, editContent.value)
+      currentPlan.value.content = editContent.value
+      showEditModal.value = false
+      editContent.value = ''
+      currentPlan.value = null
     } catch (err) {
       console.error('更新计划失败', err)
     }
   }
 
   function cancelEdit() {
-    editingPlanId.value = null
+    showEditModal.value = false
     editContent.value = ''
+    currentPlan.value = null
   }
 
   function closeModal() {
@@ -459,6 +450,7 @@
     min-height: 100%;
     display: flex;
     flex-direction: column;
+    padding-bottom: 80px;
   }
 
   .main-content {
@@ -557,7 +549,7 @@
   .nav-btn {
     padding: 8px 12px;
     border: 2px solid var(--border);
-    border-radius: 4px;
+    border-radius: 8px;
     background: white;
     color: var(--text-primary);
     cursor: pointer;
@@ -571,7 +563,6 @@
     flex: 1;
     min-width: 0;
     font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
-    transform: rotate(-0.5deg);
   }
 
   .nav-btn:hover {
@@ -923,19 +914,34 @@
   .modal-content {
     background: white;
     padding: 40px;
-    border-radius: 30px 4px 30px 4px;
+    border-radius: 12px;
     border: 3px solid var(--border);
     width: 100%;
     max-width: 500px;
-    transform: rotate(-0.5deg);
   }
 
-  .add-plan-input {
+  .add-plan-textarea {
     font-size: 18px;
     padding: 16px 20px;
-    min-height: 60px;
+    min-height: 80px;
     width: 100%;
     box-sizing: border-box;
+    resize: vertical;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+  }
+
+  .edit-textarea {
+    font-size: 18px;
+    padding: 16px 20px;
+    min-height: 80px;
+    width: 100%;
+    box-sizing: border-box;
+    resize: vertical;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
   }
 
   .delete-message {
@@ -1075,8 +1081,8 @@
   }
 
   .fab-button {
-    position: absolute;
-    bottom: 20px;
+    position: fixed;
+    bottom: 80px;
     right: 20px;
     width: 56px;
     height: 56px;
