@@ -30,11 +30,26 @@
           <p class="app-desc">查看和管理你的消息</p>
         </div>
       </div>
+      <div class="app-card" @click="navigateTo('/mobile/journal')">
+        <div class="app-icon">📝</div>
+        <div class="app-info">
+          <h3 class="app-name">暗语随笔</h3>
+          <p class="app-desc">记录个人思考和感悟</p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+function navigateTo(path) {
+  router.push(path)
+}
+
 // 应用数据可以从后端获取，这里使用模拟数据
 </script>
 
