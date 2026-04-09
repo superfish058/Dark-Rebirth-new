@@ -109,6 +109,32 @@ db.serialize(() => {
   // 添加use_online_icon字段（如果不存在）
   addColumnIfNotExists('websites', 'use_online_icon INTEGER DEFAULT 0');
   
+  // 日记分类表
+  db.run(`CREATE TABLE IF NOT EXISTS journal_categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    sort_order INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  )`);
+  
+  // 添加sort_order字段（如果不存在）
+  addColumnIfNotExists('journal_categories', 'sort_order INTEGER DEFAULT 0');
+  
+  // 日记表
+  db.run(`CREATE TABLE IF NOT EXISTS journal_notes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title TEXT,
+    content TEXT NOT NULL,
+    category_id INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (category_id) REFERENCES journal_categories(id)
+  )`);
+  
   // 这里可以添加其他需要的列
   // addColumnIfNotExists('websites', 'new_column TEXT DEFAULT NULL');
 });

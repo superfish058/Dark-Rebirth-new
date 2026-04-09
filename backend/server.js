@@ -20,11 +20,13 @@ app.use('/uploads', express.static(uploadsDir));
 const userRoutes = require('./routes/userRoutes');
 const planRoutes = require('./routes/planRoutes');
 const favoritesRoutes = require('./routes/favoritesRoutes');
+const journalRoutes = require('./routes/journalRoutes');
 
 // 注册路由
 app.use('/api', userRoutes);
 app.use('/api', planRoutes);
 app.use('/api', favoritesRoutes);
+app.use('/api/journal', journalRoutes);
 
 // 根路径
 app.get('/', (req, res) => {

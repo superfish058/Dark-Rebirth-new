@@ -95,7 +95,7 @@ watch(isDropdownOpen, (newValue) => {
     background: #f8faf8;
     border: 1px solid #dae5e1;
     border-radius: 8px;
-    font-size: 18px;
+    font-size: 15px;
     color: #2a3432;
     cursor: pointer;
     display: flex;

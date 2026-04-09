@@ -71,12 +71,6 @@ const routes = [
     name: 'MobileJournal',
     component: () => import('../views/mobile/journal/JournalView.vue'),
     meta: { requiresAuth: true }
-  },
-  {
-    path: '/mobile/journal-new',
-    name: 'MobileJournalNew',
-    component: () => import('../views/mobile/journal/JournalViewNew.vue'),
-    meta: { requiresAuth: true }
   }
 ]
 

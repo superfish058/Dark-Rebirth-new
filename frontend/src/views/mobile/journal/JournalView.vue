@@ -81,13 +81,25 @@
     
     <!-- Main Content -->
     <main class="main-content">
-      <div class="greeting-section">
-        <h2 class="greeting">早安，<span class="text-primary">记录你的每一天。</span></h2>
-        <p class="entry-count">本月已记录 {{ entriesCount }} 条</p>
+      <!-- 错误提示 -->
+      <div v-if="error" class="error-message">
+        {{ error }}
       </div>
       
-      <div class="notes-list">
-        <article 
+      <!-- 加载状态 -->
+      <div v-if="loading" class="loading-state">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">加载中...</p>
+      </div>
+      
+      <div v-else>
+        <div class="greeting-section">
+          <h2 class="greeting">早安，<span class="text-primary">记录你的每一天。</span></h2>
+          <p class="entry-count">本月已记录 {{ entriesCount }} 条</p>
+        </div>
+        
+        <div class="notes-list">
+          <article 
           v-for="note in filteredNotes" 
           :key="note.id"
           class="note-card"
@@ -95,20 +107,21 @@
         >
           <span 
             class="category-tag"
-            :class="getCategoryClass(note.category)"
+            :class="getCategoryClass(note.category_id)"
           >
-            {{ getCategoryName(note.category) || '草稿' }}
+            {{ getCategoryName(note.category_id) || '草稿' }}
           </span>
           <div class="note-content">
             <h3 class="note-title">{{ note.title || truncateContent(note.content, 50) }}</h3>
           </div>
-          <time class="note-date">{{ formatDate(note.updatedAt) }}</time>
+          <time class="note-date">{{ formatDate(note.updated_at) }}</time>
         </article>
-        
-        <!-- Empty State -->
-        <div v-if="filteredNotes.length === 0" class="empty-state">
-          <p class="empty-state-text">暂无记录</p>
-          <p class="empty-state-subtext">点击下方按钮添加你的第一条记录</p>
+          
+          <!-- Empty State -->
+          <div v-if="filteredNotes.length === 0" class="empty-state">
+            <p class="empty-state-text">暂无记录</p>
+            <p class="empty-state-subtext">点击下方按钮添加你的第一条记录</p>
+          </div>
         </div>
       </div>
     </main>
@@ -174,8 +187,12 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="modal-btn cancel-btn" @click="closeModal">取消</button>
-          <button class="modal-btn confirm-btn" @click="saveJournal">保存</button>
+          <button v-if="editingJournal" class="modal-btn delete-btn" @click="openDeleteNoteModalFromModal">删除</button>
+          <button v-else-if="!editingJournal" class="modal-btn delete-btn" style="visibility: hidden;"></button>
+          <div class="modal-footer-right">
+            <button class="modal-btn cancel-btn" @click="closeModal">取消</button>
+            <button class="modal-btn confirm-btn" @click="saveJournal">保存</button>
+          </div>
         </div>
       </div>
     </div>
@@ -195,8 +212,11 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="modal-btn cancel-btn" @click="showAddCategoryModal = false">取消</button>
-          <button class="modal-btn confirm-btn" @click="addCategory">添加</button>
+          <button class="modal-btn delete-btn" style="visibility: hidden;"></button>
+          <div class="modal-footer-right">
+            <button class="modal-btn cancel-btn" @click="showAddCategoryModal = false">取消</button>
+            <button class="modal-btn confirm-btn" @click="saveCategory">添加</button>
+          </div>
         </div>
       </div>
     </div>
@@ -216,8 +236,11 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="modal-btn cancel-btn" @click="showRenameCategoryModal = false">取消</button>
-          <button class="modal-btn confirm-btn" @click="renameCategory">保存</button>
+          <button class="modal-btn delete-btn" style="visibility: hidden;"></button>
+          <div class="modal-footer-right">
+            <button class="modal-btn cancel-btn" @click="showRenameCategoryModal = false">取消</button>
+            <button class="modal-btn confirm-btn" @click="renameCategory">保存</button>
+          </div>
         </div>
       </div>
     </div>
@@ -243,8 +266,11 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="modal-btn cancel-btn" @click="showDeleteCategoryModal = false">取消</button>
-          <button class="modal-btn confirm-btn" @click="deleteCategory">删除</button>
+          <button class="modal-btn delete-btn" style="visibility: hidden;"></button>
+          <div class="modal-footer-right">
+            <button class="modal-btn cancel-btn" @click="showDeleteCategoryModal = false">取消</button>
+            <button class="modal-btn confirm-btn" @click="deleteCategory">删除</button>
+          </div>
         </div>
       </div>
     </div>
@@ -284,8 +310,33 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="modal-btn cancel-btn" @click="closeManageCategoryModal">取消</button>
-          <button class="modal-btn confirm-btn" @click="saveCategoryOrder">保存</button>
+          <button class="modal-btn delete-btn" style="visibility: hidden;"></button>
+          <div class="modal-footer-right">
+            <button class="modal-btn cancel-btn" @click="closeManageCategoryModal">取消</button>
+            <button class="modal-btn confirm-btn" @click="saveCategoryOrder">保存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Delete Note Modal -->
+    <div v-if="showDeleteNoteModal" class="modal-overlay" style="z-index: 1200" @click.self="showDeleteNoteModal = false">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title">删除随笔</h2>
+          <button class="modal-close" @click="showDeleteNoteModal = false">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-message">确定要删除这篇随笔吗？此操作无法撤销。</p>
+        </div>
+        <div class="modal-footer">
+          <button class="modal-btn delete-btn" style="visibility: hidden;"></button>
+          <div class="modal-footer-right">
+            <button class="modal-btn cancel-btn" @click="showDeleteNoteModal = false">取消</button>
+            <button class="modal-btn confirm-btn" style="background-color: #d32f2f; border-color: #d32f2f" @click="deleteNote">删除</button>
+          </div>
         </div>
       </div>
     </div>
@@ -297,6 +348,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../../../stores/user'
 import CustomSelect from '../../../components/CustomSelect.vue'
+import { categoryApi, noteApi } from '../../../api/journal'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -319,6 +371,14 @@ const showAddModal = ref(false)
   const transferCategory = ref('')
   const showManageCategoryModal = ref(false)
   const managedCategories = ref([])
+  
+  // 删除笔记相关
+  const showDeleteNoteModal = ref(false)
+  const noteToDelete = ref(null)
+  
+  // 加载状态和错误状态
+  const loading = ref(false)
+  const error = ref('')
 
 // 计算属性：过滤和排序记录
 const filteredNotes = computed(() => {
@@ -326,9 +386,7 @@ const filteredNotes = computed(() => {
   
   // 按分类过滤
   if (selectedCategory.value !== 'all') {
-    result = result.filter(note => note.category === selectedCategory.value)
-  } else {
-    // 全部分类视图包括所有记录
+    result = result.filter(note => note.category_id === selectedCategory.value)
   }
   
   // 按搜索关键词过滤
@@ -341,7 +399,7 @@ const filteredNotes = computed(() => {
   }
   
   // 按时间倒序排序
-  result.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+  result.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
   
   return result
 })
@@ -381,37 +439,25 @@ const isMobile = computed(() => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
 })
 
-// 本地存储键名
-const STORAGE_KEYS = {
-  CATEGORIES: 'journal_categories',
-  NOTES: 'journal_notes'
-}
-
-// 从本地存储读取数据
-function loadFromStorage() {
+// 从API加载数据
+async function loadFromApi() {
   try {
-    const storedCategories = localStorage.getItem(STORAGE_KEYS.CATEGORIES)
-    const storedNotes = localStorage.getItem(STORAGE_KEYS.NOTES)
+    loading.value = true
+    error.value = ''
     
-    if (storedCategories) {
-      categories.value = JSON.parse(storedCategories)
-    }
+    // 并行加载分类和笔记
+    const [categoriesData, notesData] = await Promise.all([
+      categoryApi.getCategories(),
+      noteApi.getNotes()
+    ])
     
-    if (storedNotes) {
-      notes.value = JSON.parse(storedNotes)
-    }
-  } catch (error) {
-    console.error('从本地存储加载数据失败:', error)
-  }
-}
-
-// 保存数据到本地存储
-function saveToStorage() {
-  try {
-    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories.value))
-    localStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(notes.value))
-  } catch (error) {
-    console.error('保存数据到本地存储失败:', error)
+    categories.value = categoriesData
+    notes.value = notesData
+  } catch (err) {
+    console.error('从API加载数据失败:', err)
+    error.value = '加载数据失败，请稍后重试'
+  } finally {
+    loading.value = false
   }
 }
 
@@ -475,36 +521,53 @@ function openEditNoteModal(note) {
   showAddModal.value = true
 }
 
-function saveJournal() {
-  if (!formData.value.content.trim()) return
-  
-  if (editingJournal.value) {
-    // 编辑现有记录
-    const index = notes.value.findIndex(note => note.id === editingJournal.value.id)
-    if (index !== -1) {
-      notes.value[index] = {
-        ...notes.value[index],
-        title: formData.value.useTitle ? formData.value.title : '',
-        content: formData.value.content,
-        category: formData.value.category,
-        updatedAt: new Date().toISOString()
-      }
-    }
-  } else {
-    // 新建记录
-    const newNote = {
-      id: Date.now().toString(),
-      title: formData.value.useTitle ? formData.value.title : '',
-      content: formData.value.content,
-      category: formData.value.category,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-    notes.value.unshift(newNote)
+function openDeleteNoteModal(note) {
+  noteToDelete.value = note
+  showDeleteNoteModal.value = true
+}
+
+function openDeleteNoteModalFromModal() {
+  noteToDelete.value = editingJournal.value
+  showDeleteNoteModal.value = true
+}
+
+async function saveJournal() {
+  if (!formData.value.content.trim()) {
+    error.value = '内容不能为空'
+    return
+  }
+  if (formData.value.useTitle && !formData.value.title.trim()) {
+    error.value = '标题不能为空'
+    return
   }
   
-  saveToStorage()
-  closeModal()
+  try {
+    loading.value = true
+    error.value = ''
+    
+    const noteData = {
+      title: formData.value.useTitle ? formData.value.title : '',
+      content: formData.value.content,
+      category_id: formData.value.category || null
+    }
+    
+    if (editingJournal.value) {
+      // 编辑现有记录
+      await noteApi.updateNote(editingJournal.value.id, noteData)
+    } else {
+      // 新建记录
+      await noteApi.createNote(noteData)
+    }
+    
+    // 重新加载数据
+    await loadFromApi()
+    closeModal()
+  } catch (err) {
+    console.error('保存笔记失败:', err)
+    error.value = '保存笔记失败，请稍后重试'
+  } finally {
+    loading.value = false
+  }
 }
 
 // 分类管理方法
@@ -513,17 +576,22 @@ function openAddCategoryModal() {
   showAddCategoryModal.value = true
 }
 
-function saveCategory() {
+async function saveCategory() {
   if (!newCategoryName.value.trim()) return
   
-  const newCategory = {
-    id: Date.now().toString(),
-    name: newCategoryName.value.trim()
+  try {
+    loading.value = true
+    error.value = ''
+    
+    await categoryApi.createCategory(newCategoryName.value.trim())
+    await loadFromApi()
+    showAddCategoryModal.value = false
+  } catch (err) {
+    console.error('创建分类失败:', err)
+    error.value = '创建分类失败，请稍后重试'
+  } finally {
+    loading.value = false
   }
-  
-  categories.value.push(newCategory)
-  saveToStorage()
-  showAddCategoryModal.value = false
 }
 
 function openRenameCategoryModal(category) {
@@ -532,23 +600,24 @@ function openRenameCategoryModal(category) {
   showRenameCategoryModal.value = true
 }
 
-function renameCategory() {
+async function renameCategory() {
   if (!renameCategoryName.value.trim() || !categoryToRename.value) return
   
-  const index = categories.value.findIndex(c => c.id === categoryToRename.value.id)
-  if (index !== -1) {
-    categories.value[index].name = renameCategoryName.value.trim()
-    if (showManageCategoryModal.value) {
-      const managedIndex = managedCategories.value.findIndex(c => c.id === categoryToRename.value.id)
-      if (managedIndex !== -1) {
-        managedCategories.value[managedIndex].name = renameCategoryName.value.trim()
-      }
-    }
-    saveToStorage()
+  try {
+    loading.value = true
+    error.value = ''
+    
+    await categoryApi.updateCategory(categoryToRename.value.id, renameCategoryName.value.trim())
+    await loadFromApi()
+    
+    showRenameCategoryModal.value = false
+    categoryToRename.value = null
+  } catch (err) {
+    console.error('重命名分类失败:', err)
+    error.value = '重命名分类失败，请稍后重试'
+  } finally {
+    loading.value = false
   }
-  
-  showRenameCategoryModal.value = false
-  categoryToRename.value = null
 }
 
 function openDeleteCategoryModal(category) {
@@ -557,33 +626,57 @@ function openDeleteCategoryModal(category) {
   showDeleteCategoryModal.value = true
 }
 
-function deleteCategory() {
+async function deleteCategory() {
   if (!categoryToDelete.value) return
   
-  // 如果在管理分类弹窗中，先从管理列表中移除
-  if (showManageCategoryModal.value) {
-    managedCategories.value = managedCategories.value.filter(c => c.id !== categoryToDelete.value.id)
-  }
-  
-  // 将该分类下的记录转移到其他分类
-  notes.value.forEach(note => {
-    if (note.category === categoryToDelete.value.id) {
-      note.category = transferCategory.value
+  try {
+    loading.value = true
+    error.value = ''
+    
+    await categoryApi.deleteCategory(categoryToDelete.value.id)
+    await loadFromApi()
+    
+    // 如果当前选中的是被删除的分类，切换到全部分类
+    if (selectedCategory.value === categoryToDelete.value.id) {
+      selectedCategory.value = 'all'
     }
-  })
-  
-  // 删除分类
-  categories.value = categories.value.filter(c => c.id !== categoryToDelete.value.id)
-  
-  // 如果当前选中的是被删除的分类，切换到全部分类
-  if (selectedCategory.value === categoryToDelete.value.id) {
-    selectedCategory.value = 'all'
+    
+    // 如果管理分类弹窗打开着，更新管理列表
+    if (showManageCategoryModal.value) {
+      managedCategories.value = [...categories.value]
+    }
+    
+    showDeleteCategoryModal.value = false
+    categoryToDelete.value = null
+    transferCategory.value = ''
+  } catch (err) {
+    console.error('删除分类失败:', err)
+    error.value = '删除分类失败，请稍后重试'
+  } finally {
+    loading.value = false
   }
+}
+
+async function deleteNote() {
+  if (!noteToDelete.value) return
   
-  saveToStorage()
-  showDeleteCategoryModal.value = false
-  categoryToDelete.value = null
-  transferCategory.value = ''
+  try {
+    loading.value = true
+    error.value = ''
+    
+    await noteApi.deleteNote(noteToDelete.value.id)
+    await loadFromApi()
+    
+    showDeleteNoteModal.value = false
+    showAddModal.value = false
+    editingJournal.value = null
+    noteToDelete.value = null
+  } catch (err) {
+    console.error('删除随笔失败:', err)
+    error.value = '删除随笔失败，请稍后重试'
+  } finally {
+    loading.value = false
+  }
 }
 
 function openManageCategoryModal() {
@@ -596,10 +689,27 @@ function closeManageCategoryModal() {
   managedCategories.value = []
 }
 
-function saveCategoryOrder() {
-  categories.value = [...managedCategories.value]
-  saveToStorage()
-  closeManageCategoryModal()
+async function saveCategoryOrder() {
+  try {
+    loading.value = true
+    error.value = ''
+    
+    // 构建排序数据
+    const categoryOrders = managedCategories.value.map((cat, index) => ({
+      id: cat.id,
+      sort_order: index
+    }))
+    
+    await categoryApi.updateCategoryOrder(categoryOrders)
+    await loadFromApi()
+    
+    closeManageCategoryModal()
+  } catch (err) {
+    console.error('保存分类排序失败:', err)
+    error.value = '保存分类排序失败，请稍后重试'
+  } finally {
+    loading.value = false
+  }
 }
 
 function moveCategoryUp(index) {
@@ -652,8 +762,8 @@ function getCategoryClass(categoryId) {
 }
 
 // 初始化数据
-onMounted(() => {
-  loadFromStorage()
+onMounted(async () => {
+  await loadFromApi()
   document.addEventListener('click', handleDocumentClick)
 })
 
@@ -811,7 +921,7 @@ function handleDocumentClick(event) {
 
 /* 搜索部分 */
 .search-section {
-  padding: 0 1.5rem 1rem;
+  padding: 0 24px 16px;
 }
 
 /* 搜索输入框容器 */
@@ -834,7 +944,7 @@ function handleDocumentClick(event) {
 /* 搜索输入框图标 */
 .search-input-icon {
   color: var(--outline-variant);
-  margin-right: 0.75rem;
+  margin-right: 12px;
   font-size: 1.25rem;
   flex: none;
 }
@@ -914,7 +1024,7 @@ function handleDocumentClick(event) {
   position: sticky;
   right: 0;
   background: linear-gradient(to left, var(--surface), transparent);
-  padding-left: 1rem;
+  padding-left: 16px;
   flex: none;
   display: flex;
   align-items: center;
@@ -949,7 +1059,7 @@ function handleDocumentClick(event) {
 .categories-dropdown-menu {
   position: absolute;
   top: 100%;
-  right: 0;
+  right: 14px;
   margin-top: 8px;
   background-color: var(--surface);
   border: 1px solid var(--surface-variant);
@@ -996,12 +1106,12 @@ function handleDocumentClick(event) {
 
 /* 分类标签样式 */
 .main-content {
-  margin-top: 1rem;
+  margin-top: 16px;
 }
 
 /* 问候语 */
 .greeting-section {
-  padding: 0 1.5rem 1.5rem;
+  padding: 0 24px 24px;
 }
 
 .greeting {
@@ -1020,12 +1130,12 @@ function handleDocumentClick(event) {
 
 /* 条目计数 */
 .entry-count {
-  margin-top: 0.25rem;
+  margin-top: 4px;
   font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
   font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.0625rem;
+  letter-spacing: 1px;
   color: var(--on-surface-variant);
   margin-bottom: 0;
 }
@@ -1040,17 +1150,49 @@ function handleDocumentClick(event) {
 .note-card {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1.5rem;
+  gap: 12px;
+  padding: 12px 24px;
   border-bottom: 1px solid var(--surface-container);
   transition: all 0.2s ease;
-  cursor: pointer;
   width: 100%;
   box-sizing: border-box;
 }
 
-.note-card:active {
+.note-card-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.note-card-content:active {
   background-color: var(--surface-container);
+}
+
+/* 笔记删除按钮 */
+.note-delete-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  border-radius: 4px;
+  flex: none;
+  transition: all 0.2s ease;
+}
+
+.note-delete-btn:hover {
+  background-color: rgba(211, 47, 47, 0.1);
+  color: #d32f2f;
+}
+
+.note-delete-btn .material-symbols-outlined {
+  font-size: 18px;
 }
 
 /* 分类标签 */
@@ -1094,6 +1236,7 @@ function handleDocumentClick(event) {
   min-width: 0;
   display: flex;
   align-items: center;
+  overflow: hidden;
 }
 
 /* 笔记标题 */
@@ -1120,13 +1263,56 @@ function handleDocumentClick(event) {
   line-height: 1.4;
 }
 
+/* 错误提示 */
+.error-message {
+  background-color: rgba(255, 0, 0, 0.1);
+  color: #d32f2f;
+  padding: 12px 16px;
+  margin: 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* 加载状态 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--surface-variant);
+  border-top: 4px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+  font-size: 16px;
+  color: var(--on-surface-variant);
+  margin: 0;
+}
+
 /* 空状态 */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 1.5rem;
+  padding: 64px 24px;
   text-align: center;
 }
 
@@ -1179,12 +1365,13 @@ function handleDocumentClick(event) {
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 0.75rem 1rem 1.5rem;
+  gap: 12px;
+  padding: 12px 16px 24px;
   background-color: rgba(248, 250, 248, 0.7);
   backdrop-filter: blur(10px);
   z-index: 50;
-  border-top-left-radius: 1.5rem;
-  border-top-right-radius: 1.5rem;
+  border-top-left-radius: 24px;
+  border-top-right-radius: 24px;
   box-shadow: 0 -8px 24px rgba(42, 52, 50, 0.06);
 }
 
@@ -1200,7 +1387,7 @@ function handleDocumentClick(event) {
   cursor: pointer;
   text-decoration: none;
   flex: 1;
-  max-width: 8rem;
+  max-width: 128px;
 }
 
 .nav-item:active {
@@ -1220,7 +1407,7 @@ function handleDocumentClick(event) {
 
 /* 导航图标 */
 .nav-item .material-symbols-outlined {
-  margin-bottom: 0.125rem;
+  margin-bottom: 2px;
   font-size: 1.25rem;
 }
 
@@ -1229,7 +1416,7 @@ function handleDocumentClick(event) {
   font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
   font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: 0.03125rem;
+  letter-spacing: 0.5px;
   text-align: center;
   margin: 0;
 }
@@ -1278,7 +1465,7 @@ function handleDocumentClick(event) {
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(1.25rem);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -1326,16 +1513,32 @@ function handleDocumentClick(event) {
 /* 模态框底部 */
 .modal-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 12px;
   align-items: center;
   padding-top: 16px;
   border-top: 1px solid var(--surface-container);
 }
 
+.modal-footer-right {
+  display: flex;
+  gap: 12px;
+}
+
+/* 删除按钮 */
+.delete-btn {
+  background-color: #d32f2f;
+  color: white;
+  border: 1px solid #d32f2f;
+}
+
+.delete-btn:hover {
+  background-color: #b71c1c;
+}
+
 /* 表单组 */
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
 }
 
 /* 表单标签 */
@@ -1376,7 +1579,7 @@ function handleDocumentClick(event) {
 /* 文本域 */
 .form-textarea {
   resize: vertical;
-  min-height: 10rem;
+  min-height: 160px;
   line-height: 1.5;
 }
 
@@ -1416,14 +1619,14 @@ function handleDocumentClick(event) {
 .toggle-label {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 12px;
   flex-wrap: wrap;
-  min-height: 3rem;
+  min-height: 48px;
 }
 
 .toggle-checkbox {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
   accent-color: var(--primary);
 }
@@ -1435,7 +1638,7 @@ function handleDocumentClick(event) {
 
 .toggle-label .title-input {
   flex: 1;
-  min-width: 12.5rem;
+  min-width: 200px;
 }
 
 /* 模态框消息 */
