@@ -2,7 +2,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
-import Home from '../views/Home.vue'
 import DesktopView from '../views/desktop/DesktopView.vue'
 
 // 检测设备类型
@@ -27,7 +26,13 @@ const routes = [
   {
     path: '/',
     name: 'Home',
-    component: Home,
+    redirect: (to) => {
+      if (isMobileDevice()) {
+        return '/mobile'
+      } else {
+        return '/desktop'
+      }
+    },
     meta: { requiresAuth: true }
   },
   {
@@ -66,6 +71,12 @@ const routes = [
     name: 'MobileJournal',
     component: () => import('../views/mobile/journal/JournalView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/mobile/journal-new',
+    name: 'MobileJournalNew',
+    component: () => import('../views/mobile/journal/JournalViewNew.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
@@ -74,20 +85,18 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, from) => {
   const userStore = useUserStore()
   
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {
-    next('/login')
+    return '/login'
   } else if (to.meta.requiresGuest && userStore.isLoggedIn) {
     // 根据设备类型重定向到不同视图
     if (isMobileDevice()) {
-      next('/mobile')
+      return '/mobile'
     } else {
-      next('/desktop')
+      return '/desktop'
     }
-  } else {
-    next()
   }
 })
 

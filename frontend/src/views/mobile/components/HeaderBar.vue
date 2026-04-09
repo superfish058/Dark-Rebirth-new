@@ -4,7 +4,7 @@
       <i class="fas fa-arrow-left"></i>
     </button>
     <div v-else class="left-space"></div>
-    <h1 class="page-title">{{ title }}</h1>
+    <h1 class="page-title" :style="{ color: titleColor }">{{ title }}</h1>
     <div class="right-space"></div>
   </div>
 </template>
@@ -20,6 +20,10 @@
     showBack: {
       type: Boolean,
       default: false
+    },
+    titleColor: {
+      type: String,
+      default: 'var(--text-primary)'
     }
   })
 
@@ -65,7 +69,6 @@
   .page-title {
     font-size: 18px;
     font-weight: 600;
-    color: var(--text-primary);
     margin: 0;
     flex: 1;
     text-align: center;

@@ -1,12 +1,12 @@
 <template>
   <div class="mobile-layout">
-    <HeaderBar :title="title" :show-back="showBack" />
+    <HeaderBar :title="title" :show-back="showBack" :title-color="titleColor" />
     <main class="main-content">
       <div class="content-wrapper">
         <slot></slot>
       </div>
     </main>
-    <NavBar />
+    <NavBar v-if="showNav" />
   </div>
 </template>
 
@@ -22,6 +22,14 @@ const props = defineProps({
   showBack: {
     type: Boolean,
     default: false
+  },
+  titleColor: {
+    type: String,
+    default: 'var(--text-primary)'
+  },
+  showNav: {
+    type: Boolean,
+    default: true
   }
 })
 </script>

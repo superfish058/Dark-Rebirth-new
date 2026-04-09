@@ -1,160 +1,85 @@
 <template>
-  <div class="custom-select" :class="{ open: isOpen }">
-    <div class="select-input" @click="toggleDropdown" ref="selectInput">
-      <span class="selected-value">
-        {{ selectedLabel || placeholder }}
-      </span>
-      <svg class="arrow-icon" :class="{ rotated: isOpen }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="6 9 12 15 18 9"></polyline>
-      </svg>
-    </div>
-    
-    <Teleport to="body">
+  <div class="custom-select">
+    <button 
+      class="select-button" 
+      @click="toggleDropdown"
+      :class="{ active: isDropdownOpen }"
+    >
+      <span class="selected-value">{{ selectedOption ? selectedOption.label : placeholder }}</span>
+      <i class="fas fa-chevron-down" :class="{ rotated: isDropdownOpen }"></i>
+    </button>
+    <div v-if="isDropdownOpen" class="dropdown-menu">
       <div 
-        class="select-dropdown" 
-        v-show="isOpen" 
-        ref="dropdown"
-        :style="dropdownStyle"
+        v-for="option in options" 
+        :key="option.value"
+        class="dropdown-item"
+        :class="{ active: selectedValue === option.value }"
+        @click="selectOption(option)"
       >
-        <div 
-          v-for="option in options" 
-          :key="option.value"
-          class="select-option"
-          :class="{ active: modelValue === option.value }"
-          @click="selectOption(option)"
-        >
-          {{ option.label }}
-        </div>
+        {{ option.label }}
       </div>
-    </Teleport>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 
 const props = defineProps({
-  modelValue: [String, Number],
+  modelValue: {
+    type: [String, Number],
+    default: ''
+  },
   options: {
     type: Array,
     required: true
   },
   placeholder: {
     type: String,
-    default: '请选择'
+    default: '选择选项'
   }
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])
 
-const isOpen = ref(false)
-const selectInput = ref(null)
-const dropdown = ref(null)
-const dropdownStyle = ref({})
+const isDropdownOpen = ref(false)
 
-const selectedLabel = computed(() => {
-  const selected = props.options.find(opt => opt.value === props.modelValue)
-  return selected ? selected.label : ''
+const selectedValue = computed({
+  get: () => props.modelValue,
+  set: (value) => {
+    emit('update:modelValue', value)
+  }
+})
+
+const selectedOption = computed(() => {
+  return props.options.find(option => option.value === selectedValue.value)
 })
 
 function toggleDropdown() {
-  isOpen.value = !isOpen.value
-  if (isOpen.value) {
-    // 立即计算位置，然后在 nextTick 中再次计算以确保准确性
-    updateDropdownPosition()
-    nextTick(() => {
-      updateDropdownPosition()
-    })
-  }
+  isDropdownOpen.value = !isDropdownOpen.value
 }
 
-function updateDropdownPosition() {
-  if (!selectInput.value || !dropdown.value) return
-  
-  const inputRect = selectInput.value.getBoundingClientRect()
-  const viewportHeight = window.innerHeight
-  
-  // 计算下拉框底部到视口底部的距离
-  const spaceBelow = viewportHeight - inputRect.bottom
-  const spaceAbove = inputRect.top
-  
-  // 估算下拉框高度（每个选项约 44px）
-  const estimatedHeight = Math.min(props.options.length * 44, 240)
-  
-  let top, maxHeight
-  
-  // 如果下方空间足够，显示在下方
-  if (spaceBelow >= estimatedHeight) {
-    top = inputRect.bottom + 4
-    maxHeight = Math.min(spaceBelow - 4, 240)
-  } 
-  // 否则显示在上方
-  else if (spaceAbove >= estimatedHeight) {
-    top = inputRect.top - estimatedHeight
-    maxHeight = Math.min(spaceAbove - 4, 240)
-  } 
-  // 如果上下空间都不够，优先显示在下方，但限制最大高度
-  else {
-    top = inputRect.bottom + 4
-    maxHeight = Math.max(spaceBelow, spaceAbove) - 4
-  }
-  
-  dropdownStyle.value = {
-    position: 'fixed',
-    top: `${top}px`,
-    left: `${inputRect.left}px`,
-    width: `${inputRect.width}px`,
-    maxHeight: `${maxHeight}px`,
-    zIndex: 9999
-  }
-}
-
-// 监听窗口滚动和大小变化
 function selectOption(option) {
-  emit('update:modelValue', option.value)
+  selectedValue.value = option.value
   emit('change', option)
-  isOpen.value = false
+  isDropdownOpen.value = false
 }
 
+// 点击外部关闭下拉菜单
 function handleClickOutside(event) {
-  if (isOpen.value && 
-      selectInput.value && !selectInput.value.contains(event.target) &&
-      dropdown.value && !dropdown.value.contains(event.target)) {
-    isOpen.value = false
+  const selectElement = event.target.closest('.custom-select')
+  if (!selectElement) {
+    isDropdownOpen.value = false
   }
 }
 
-// 监听窗口滚动和大小变化
-function handleScroll() {
-  if (isOpen.value) {
-    updateDropdownPosition()
+// 监听点击事件
+watch(isDropdownOpen, (newValue) => {
+  if (newValue) {
+    document.addEventListener('click', handleClickOutside)
+  } else {
+    document.removeEventListener('click', handleClickOutside)
   }
-}
-
-function handleResize() {
-  if (isOpen.value) {
-    updateDropdownPosition()
-  }
-}
-
-watch(isOpen, (newVal) => {
-  if (newVal) {
-    nextTick(() => {
-      updateDropdownPosition()
-    })
-  }
-})
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-  window.addEventListener('scroll', handleScroll, true)
-  window.addEventListener('resize', handleResize)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-  window.removeEventListener('scroll', handleScroll, true)
-  window.removeEventListener('resize', handleResize)
 })
 </script>
 
@@ -164,117 +89,75 @@ onUnmounted(() => {
   width: 100%;
 }
 
-.select-input {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  background-color: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 14px;
-  color: #334155;
+.select-button {
+    width: 100%;
+    padding: 12px 16px;
+    background: #f8faf8;
+    border: 1px solid #dae5e1;
+    border-radius: 8px;
+    font-size: 18px;
+    color: #2a3432;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+  }
+
+.select-button:hover {
+  border-color: #3b6934;
 }
 
-.select-input:hover {
-  border-color: #0042a6;
-}
-
-.select-input.open {
-  border-color: #0042a6;
-  box-shadow: 0 0 0 4px rgba(0, 66, 166, 0.1);
+.select-button.active {
+  border-color: #3b6934;
+  box-shadow: 0 0 0 2px rgba(59, 105, 52, 0.1);
 }
 
 .selected-value {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+    flex: 1;
+    text-align: left;
+  }
+
+.select-button i {
+  font-size: 14px;
+  color: #57615f;
+  transition: transform 0.2s;
 }
 
-.arrow-icon {
-  width: 16px;
-  height: 16px;
-  transition: transform 0.3s ease;
-  color: #64748b;
-  flex-shrink: 0;
-  margin-left: 8px;
-}
-
-.arrow-icon.rotated {
+.select-button i.rotated {
   transform: rotate(180deg);
 }
 
-.select-dropdown {
-  background: white;
-  border: 2px solid #0042a6;
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  background: #ffffff;
+  border: 1px solid #dae5e1;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 66, 166, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  overflow: hidden;
+  max-height: 200px;
   overflow-y: auto;
-  animation: dropdownSlideIn 0.2s ease;
 }
 
-@keyframes dropdownSlideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
+.dropdown-item {
+    padding: 12px 16px;
+    font-size: 16px;
+    color: #2a3432;
+    cursor: pointer;
+    transition: background-color 0.2s;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+
+.dropdown-item:hover {
+  background: #f0f5f2;
 }
 
-.select-option {
-  padding: 12px 16px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #334155;
-  font-size: 14px;
-}
-
-.select-option:hover {
-  background-color: #f1f5f9;
-  color: #0042a6;
-}
-
-.select-option.active {
-  background-color: #e2e8f0;
-  color: #0042a6;
-  font-weight: 600;
-}
-
-.select-option:first-child {
-  border-radius: 6px 6px 0 0;
-}
-
-.select-option:last-child {
-  border-radius: 0 0 6px 6px;
-}
-
-/* 自定义滚动条 - 只在 hover 时显示 */
-.select-dropdown::-webkit-scrollbar {
-  width: 0;
-}
-
-.select-dropdown:hover::-webkit-scrollbar {
-  width: 6px;
-}
-
-.select-dropdown::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 3px;
-}
-
-.select-dropdown::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-  transition: background 0.2s ease;
-}
-
-.select-dropdown::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+.dropdown-item.active {
+  background: #bcf0ae;
+  color: #1c4818;
 }
 </style>

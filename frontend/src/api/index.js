@@ -1,5 +1,6 @@
 import axios from 'axios'
 import notificationService from '../utils/notification'
+import { useUserStore } from '../stores/user'
 
 const api = axios.create({
   baseURL: '/api',
@@ -29,9 +30,15 @@ api.interceptors.response.use(
       switch (status) {
         case 401:
           message = '未授权，请重新登录'
+          // 清除认证信息
+          const userStore = useUserStore()
+          userStore.logout()
           break
         case 403:
           message = '拒绝访问'
+          // 清除认证信息
+          const userStore403 = useUserStore()
+          userStore403.logout()
           break
         case 404:
           message = '请求的资源不存在'
