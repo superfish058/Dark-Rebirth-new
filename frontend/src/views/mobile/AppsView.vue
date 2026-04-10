@@ -16,7 +16,7 @@
                 <p class="app-description">管理每日和每周计划</p>
               </div>
               <div class="app-arrow">
-                <i class="fas fa-chevron-right"></i>
+                <Icon icon="mdi:chevron-right" />
               </div>
             </div>
           </div>
@@ -32,7 +32,7 @@
                 <p class="app-description">记录个人思考和感悟</p>
               </div>
               <div class="app-arrow">
-                <i class="fas fa-chevron-right"></i>
+                <Icon icon="mdi:chevron-right" />
               </div>
             </div>
           </div>
@@ -114,6 +114,7 @@
 <script setup>
   import { useRouter } from 'vue-router'
   import MobileLayout from './components/MobileLayout.vue'
+  import { Icon } from '@iconify/vue'
 
   const router = useRouter()
 
@@ -218,8 +219,11 @@
     margin: 0;
   }
 
-  .app-arrow {
+  .app-arrow :deep(.iconify) {
     color: var(--text-secondary);
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
   }
 
   .app-status {

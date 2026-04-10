@@ -4,7 +4,7 @@
     <header class="header sticky" @click="handleHeaderClick">
       <div class="header-top">
         <button class="back-btn" @click="goHome">
-          <span class="material-symbols-outlined">home</span>
+          <Icon icon="mdi:home" />
         </button>
         <h1 class="title">暗语随笔</h1>
         <div class="header-actions">
@@ -16,7 +16,7 @@
       
       <div class="search-section">
         <div class="search-input-wrapper">
-          <span class="material-symbols-outlined search-input-icon">search</span>
+          <Icon icon="mdi:search" class="search-input-icon" />
           <input 
             type="text" 
             class="search-input" 
@@ -47,7 +47,7 @@
         </div>
         <div class="sticky-right">
           <button class="more-btn" @click="toggleCategoryDropdown">
-            <span class="material-symbols-outlined dropdown-arrow" :class="{ rotated: showCategoryDropdown }">expand_more</span>
+            <Icon icon="mdi:chevron-down" class="dropdown-arrow" :class="{ rotated: showCategoryDropdown }" />
           </button>
         </div>
       </div>
@@ -71,10 +71,10 @@
           {{ category.name }}
         </div>
         <div class="dropdown-item manage-category" @click="openManageCategoryModal(); showCategoryDropdown = false">
-          <span class="material-symbols-outlined">settings</span> 管理分类
+          <Icon icon="mdi:cog" /> 管理分类
         </div>
         <div class="dropdown-item add-category" @click="openAddCategoryModal(); showCategoryDropdown = false">
-          <span class="material-symbols-outlined">add</span> 新建分类
+          <Icon icon="mdi:plus" /> 新建分类
         </div>
       </div>
     </header>
@@ -94,7 +94,7 @@
       
       <div v-else>
         <div class="greeting-section">
-          <h2 class="greeting">早安，<span class="text-primary">记录你的每一天。</span></h2>
+          <h2 class="greeting">{{ greetingMessage }}，<span class="text-primary">记录你的每一天。</span></h2>
           <p class="entry-count">本月已记录 {{ entriesCount }} 条</p>
         </div>
         
@@ -128,25 +128,25 @@
     
     <!-- Floating Action Button -->
     <button class="fab-button" @click="openAddNoteModal">
-      <span class="material-symbols-outlined">add</span>
+      <Icon icon="mdi:plus" />
     </button>
     
     <!-- Bottom Navigation -->
     <nav class="bottom-nav">
       <a class="nav-item active" href="#">
-        <span class="material-symbols-outlined">edit_note</span>
+        <Icon icon="mdi:note-edit" />
         <span class="nav-label">随笔</span>
       </a>
       <a class="nav-item" href="#">
-        <span class="material-symbols-outlined">search</span>
+        <Icon icon="mdi:search" />
         <span class="nav-label">搜索</span>
       </a>
       <a class="nav-item" href="#">
-        <span class="material-symbols-outlined">analytics</span>
+        <Icon icon="mdi:chart-bar" />
         <span class="nav-label">统计</span>
       </a>
       <a class="nav-item" href="#">
-        <span class="material-symbols-outlined">settings</span>
+        <Icon icon="mdi:cog" />
         <span class="nav-label">设置</span>
       </a>
     </nav>
@@ -157,7 +157,7 @@
         <div class="modal-header">
           <h2 class="modal-title">{{ editingJournal ? '编辑随笔' : '添加随笔' }}</h2>
           <button class="modal-close" @click="closeModal">
-            <span class="material-symbols-outlined">close</span>
+            <Icon icon="mdi:close" />
           </button>
         </div>
         <div class="modal-body">
@@ -203,7 +203,7 @@
         <div class="modal-header">
           <h2 class="modal-title">新建分类</h2>
           <button class="modal-close" @click="showAddCategoryModal = false">
-            <span class="material-symbols-outlined">close</span>
+            <Icon icon="mdi:close" />
           </button>
         </div>
         <div class="modal-body">
@@ -227,7 +227,7 @@
         <div class="modal-header">
           <h2 class="modal-title">重命名分类</h2>
           <button class="modal-close" @click="showRenameCategoryModal = false">
-            <span class="material-symbols-outlined">close</span>
+            <Icon icon="mdi:close" />
           </button>
         </div>
         <div class="modal-body">
@@ -251,7 +251,7 @@
         <div class="modal-header">
           <h2 class="modal-title">删除分类</h2>
           <button class="modal-close" @click="showDeleteCategoryModal = false">
-            <span class="material-symbols-outlined">close</span>
+            <Icon icon="mdi:close" />
           </button>
         </div>
         <div class="modal-body">
@@ -281,7 +281,7 @@
         <div class="modal-header">
           <h2 class="modal-title">管理分类</h2>
           <button class="modal-close" @click="closeManageCategoryModal">
-            <span class="material-symbols-outlined">close</span>
+            <Icon icon="mdi:close" />
           </button>
         </div>
         <div class="modal-body">
@@ -292,19 +292,19 @@
               class="manage-category-item"
             >
               <button class="drag-handle" @click="moveCategoryUp(index)" :disabled="index === 0">
-                <span class="material-symbols-outlined">arrow_upward</span>
+                <Icon icon="mdi:arrow-up" />
               </button>
               <span class="manage-category-name">{{ category.name }}</span>
               <div class="manage-category-actions">
                 <button class="manage-action-btn" @click="openRenameCategoryModal(category)">
-                  <span class="material-symbols-outlined">edit</span>
+                  <Icon icon="mdi:pencil" />
                 </button>
                 <button class="manage-action-btn" @click="openDeleteCategoryModal(category)">
-                  <span class="material-symbols-outlined">delete</span>
+                  <Icon icon="mdi:delete" />
                 </button>
               </div>
               <button class="drag-handle" @click="moveCategoryDown(index)" :disabled="index === managedCategories.length - 1">
-                <span class="material-symbols-outlined">arrow_downward</span>
+                <Icon icon="mdi:arrow-down" />
               </button>
             </div>
           </div>
@@ -325,7 +325,7 @@
         <div class="modal-header">
           <h2 class="modal-title">删除随笔</h2>
           <button class="modal-close" @click="showDeleteNoteModal = false">
-            <span class="material-symbols-outlined">close</span>
+            <Icon icon="mdi:close" />
           </button>
         </div>
         <div class="modal-body">
@@ -349,6 +349,7 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '../../../stores/user'
 import CustomSelect from '../../../components/CustomSelect.vue'
 import { categoryApi, noteApi } from '../../../api/journal'
+import { Icon } from '@iconify/vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -406,6 +407,20 @@ const filteredNotes = computed(() => {
 
 // 计算属性：记录数量
 const entriesCount = computed(() => notes.value.length)
+
+// 计算属性：根据时间的问候语
+const greetingMessage = computed(() => {
+  const hour = new Date().getHours()
+  if (hour >= 5 && hour < 12) {
+    return '早安'
+  } else if (hour >= 12 && hour < 18) {
+    return '下午好'
+  } else if (hour >= 18 && hour < 22) {
+    return '晚上好'
+  } else {
+    return '夜深了'
+  }
+})
 
 // 计算属性：获取分类名称
 const getCategoryName = computed(() => {
@@ -812,26 +827,14 @@ function handleDocumentClick(event) {
   --outline-variant: #a9b4b1;
 }
 
-/* Material Symbols Outlined 图标设置 */
-.journal-page .material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24 !important;
-  font-family: 'Material Symbols Outlined' !important;
-  font-style: normal !important;
-  font-weight: normal !important;
-  font-size: 24px !important;
-  line-height: 1 !important;
-  letter-spacing: normal !important;
-  text-transform: none !important;
-  display: inline-block !important;
-  white-space: nowrap !important;
-  word-wrap: normal !important;
-  direction: ltr !important;
-  -webkit-font-feature-settings: 'liga' !important;
-  -webkit-font-smoothing: antialiased !important;
-}
 </style>
 
 <style scoped>
+/* Icon 大小共用类 */
+.iconify {
+  font-size: 20px;
+}
+
 /* 页面容器 */
 .journal-page {
   min-height: 100vh;
@@ -873,8 +876,9 @@ function handleDocumentClick(event) {
   flex: none;
 }
 
-.back-btn .material-symbols-outlined {
-  font-size: 20px;
+.back-btn .iconify {
+  width: 20px;
+  height: 20px;
 }
 
 /* 头部标题 */
@@ -945,7 +949,6 @@ function handleDocumentClick(event) {
 .search-input-icon {
   color: var(--outline-variant);
   margin-right: 12px;
-  font-size: 1.25rem;
   flex: none;
 }
 
@@ -1068,6 +1071,7 @@ function handleDocumentClick(event) {
   z-index: 100;
   min-width: 192px;
   overflow: hidden;
+  padding-bottom: 4px;
 }
 
 /* 下拉菜单项 */
@@ -1089,19 +1093,12 @@ function handleDocumentClick(event) {
 }
 
 .dropdown-item.add-category {
-  color: var(--primary);
+  color: var(--on-surface);
 }
 
 .dropdown-item.manage-category {
-  color: var(--secondary);
+  color: var(--on-surface);
   border-top: 1px solid var(--surface-variant);
-  margin-top: 4px;
-  padding-top: 12px;
-}
-
-.dropdown-item .material-symbols-outlined {
-  font-size: 14px;
-  flex: none;
 }
 
 /* 分类标签样式 */
@@ -1366,7 +1363,7 @@ function handleDocumentClick(event) {
   justify-content: space-around;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px 24px;
+  padding: 12px 16px;
   background-color: rgba(248, 250, 248, 0.7);
   backdrop-filter: blur(10px);
   z-index: 50;

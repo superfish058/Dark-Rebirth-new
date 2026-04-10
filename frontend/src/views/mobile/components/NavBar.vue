@@ -7,7 +7,7 @@
       :class="{ active: currentPath === item.path }"
       @click="navigateTo(item.path)"
     >
-      <i :class="item.icon"></i>
+      <Icon :icon="item.icon" />
       <span class="nav-text">{{ item.name }}</span>
     </div>
   </div>
@@ -16,6 +16,7 @@
 <script setup>
   import { computed } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
+  import { Icon } from '@iconify/vue'
 
   const route = useRoute()
   const router = useRouter()
@@ -26,17 +27,17 @@
     {
       name: '首页',
       path: '/mobile',
-      icon: 'fas fa-home'
+      icon: 'mdi:home'
     },
     {
       name: '应用',
       path: '/mobile/apps',
-      icon: 'fas fa-th-large'
+      icon: 'mdi:view-grid'
     },
     {
       name: '我的',
       path: '/mobile/profile',
-      icon: 'fas fa-user'
+      icon: 'mdi:account'
     }
   ]
 
@@ -75,8 +76,10 @@
     color: var(--primary);
   }
 
-  .nav-item i {
-    font-size: 20px;
+  .nav-item :deep(.iconify) {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
     margin-bottom: 4px;
   }
 

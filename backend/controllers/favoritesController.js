@@ -400,10 +400,10 @@ const deleteCategory = (req, res) => {
       return res.status(404).json({ error: '分类不存在' });
     }
     
-    // 先删除分类下的所有网站
-    db.run('DELETE FROM websites WHERE category_id = ?', [categoryId], (err) => {
+    // 将分类下的网站移动到默认分类
+    db.run('UPDATE websites SET category_id = 999 WHERE category_id = ?', [categoryId], (err) => {
       if (err) {
-        return res.status(500).json({ error: '删除网站失败' });
+        return res.status(500).json({ error: '更新网站分类失败' });
       }
       
       // 再删除分类

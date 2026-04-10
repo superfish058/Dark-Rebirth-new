@@ -2,32 +2,11 @@
   <div class="apps-view">
     <h2 class="apps-title">全部应用</h2>
     <div class="apps-grid">
-      <div class="app-card">
+      <div class="app-card" @click="navigateTo('/mobile/plan')">
         <div class="app-icon">📅</div>
         <div class="app-info">
-          <h3 class="app-name">每日计划</h3>
+          <h3 class="app-name">影途执记</h3>
           <p class="app-desc">管理你的日常任务和计划</p>
-        </div>
-      </div>
-      <div class="app-card">
-        <div class="app-icon">📚</div>
-        <div class="app-info">
-          <h3 class="app-name">知识库</h3>
-          <p class="app-desc">存储和管理你的知识内容</p>
-        </div>
-      </div>
-      <div class="app-card">
-        <div class="app-icon">📊</div>
-        <div class="app-info">
-          <h3 class="app-name">数据分析</h3>
-          <p class="app-desc">分析和可视化你的数据</p>
-        </div>
-      </div>
-      <div class="app-card">
-        <div class="app-icon">💬</div>
-        <div class="app-info">
-          <h3 class="app-name">消息中心</h3>
-          <p class="app-desc">查看和管理你的消息</p>
         </div>
       </div>
       <div class="app-card" @click="navigateTo('/mobile/journal')">
@@ -49,8 +28,6 @@ const router = useRouter()
 function navigateTo(path) {
   router.push(path)
 }
-
-// 应用数据可以从后端获取，这里使用模拟数据
 </script>
 
 <style scoped>
@@ -87,6 +64,7 @@ function navigateTo(path) {
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border-color: #0ea5e9;
+  cursor: pointer;
 }
 
 .app-icon {

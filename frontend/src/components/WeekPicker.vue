@@ -11,21 +11,21 @@
         <div class="year-month-selector">
           <div class="year-selector">
             <button class="year-nav-btn" @click="previousYear">
-              <i class="fas fa-chevron-left"></i>
+              <Icon icon="mdi:chevron-left" />
             </button>
             <span class="year-display">{{ selectedYear }}年</span>
             <button class="year-nav-btn" @click="nextYear">
-              <i class="fas fa-chevron-right"></i>
+              <Icon icon="mdi:chevron-right" />
             </button>
           </div>
           
           <div class="month-selector">
             <button class="month-nav-btn" @click="previousMonth">
-              <i class="fas fa-chevron-left"></i>
+              <Icon icon="mdi:chevron-left" />
             </button>
             <span class="month-display">{{ monthNames[selectedMonth] }}</span>
             <button class="month-nav-btn" @click="nextMonth">
-              <i class="fas fa-chevron-right"></i>
+              <Icon icon="mdi:chevron-right" />
             </button>
           </div>
         </div>
@@ -52,6 +52,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { Icon } from '@iconify/vue'
 
 const props = defineProps({
   visible: {

@@ -4,7 +4,7 @@
       <div class="modal-header">
         <h3 v-if="title" class="modal-title">{{ title }}</h3>
         <button class="close-btn" @click="handleClose" aria-label="关闭">
-          <i class="fas fa-times close-icon"></i>
+          <Icon icon="mdi:close" class="close-icon" />
         </button>
       </div>
       <div class="modal-body">
@@ -24,6 +24,7 @@
 
 <script setup>
 import { defineProps, defineEmits } from 'vue'
+import { Icon } from '@iconify/vue'
 
 const props = defineProps({
   visible: {
@@ -159,7 +160,15 @@ function handleConfirm() {
   line-height: 1;
   color: var(--text-secondary);
   font-size: 24px;
+  width: 24px;
+  height: 24px;
   transition: all 0.2s ease;
+}
+
+:deep(.close-icon) {
+  color: var(--text-secondary);
+  width: 24px;
+  height: 24px;
 }
 
 .close-btn:hover .close-icon {

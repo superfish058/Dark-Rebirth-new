@@ -4,7 +4,9 @@
   "description": "一个采用手绘风格设计的日常任务管理全栈 Web 应用。",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently \"cd frontend && npm run dev\" \"cd backend && npm run dev\""
+    "dev": "concurrently \"cd frontend && npm run dev\" \"cd backend && npm run dev\"",
+    "ps": "netstat -ano | findstr \"LISTENING\" | findstr \":3000 :5173 :5174 :5175\"",
+    "kill": "taskkill /F /IM node.exe"
   },
   "repository": {
     "type": "git",

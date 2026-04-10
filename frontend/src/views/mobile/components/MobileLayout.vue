@@ -50,5 +50,6 @@ const props = defineProps({
 .content-wrapper {
   padding: 16px;
   height: 100%;
+  overflow-y: auto;
 }
 </style>

@@ -1,20 +1,20 @@
 <template>
   <div class="custom-select">
-    <button 
+    <div 
       class="select-button" 
-      @click="toggleDropdown"
+      @mousedown.prevent="toggleDropdown"
       :class="{ active: isDropdownOpen }"
     >
       <span class="selected-value">{{ selectedOption ? selectedOption.label : placeholder }}</span>
-      <i class="fas fa-chevron-down" :class="{ rotated: isDropdownOpen }"></i>
-    </button>
-    <div v-if="isDropdownOpen" class="dropdown-menu">
+      <Icon icon="mdi:chevron-down" :class="{ rotated: isDropdownOpen }" />
+    </div>
+    <div v-if="isDropdownOpen" class="dropdown-menu" @mousedown.prevent>
       <div 
         v-for="option in options" 
         :key="option.value"
         class="dropdown-item"
         :class="{ active: selectedValue === option.value }"
-        @click="selectOption(option)"
+        @mousedown.prevent="selectOption(option)"
       >
         {{ option.label }}
       </div>
@@ -24,6 +24,7 @@
 
 <script setup>
 import { ref, watch, computed } from 'vue'
+import { Icon } from '@iconify/vue'
 
 const props = defineProps({
   modelValue: {
@@ -65,25 +66,21 @@ function selectOption(option) {
   isDropdownOpen.value = false
 }
 
-// 点击外部关闭下拉菜单
-function handleClickOutside(event) {
-  const selectElement = event.target.closest('.custom-select')
-  if (!selectElement) {
-    isDropdownOpen.value = false
-  }
+function closeDropdown() {
+  isDropdownOpen.value = false
 }
 
-// 监听点击事件
-watch(isDropdownOpen, (newValue) => {
-  if (newValue) {
-    document.addEventListener('click', handleClickOutside)
-  } else {
-    document.removeEventListener('click', handleClickOutside)
-  }
+defineExpose({
+  closeDropdown
 })
 </script>
 
 <style scoped>
+/* Icon 大小共用类 */
+.iconify {
+  font-size: 20px;
+}
+
 .custom-select {
   position: relative;
   width: 100%;
@@ -118,13 +115,9 @@ watch(isDropdownOpen, (newValue) => {
     text-align: left;
   }
 
-.select-button i {
-  font-size: 14px;
-  color: #57615f;
-  transition: transform 0.2s;
-}
 
-.select-button i.rotated {
+
+.select-button :deep(svg.rotated) {
   transform: rotate(180deg);
 }
 

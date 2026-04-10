@@ -5,7 +5,7 @@
       <div class="date-display">
         <h2 class="current-date">{{ formattedDate }}</h2>
         <button class="date-picker-btn" @click="showDatePicker">
-          <i class="fas fa-calendar-alt"></i>
+          <Icon icon="mdi:calendar" />
         </button>
       </div>
       
@@ -21,12 +21,12 @@
 
         <div class="nav-buttons">
           <button class="nav-btn" @click="navigatePrevious">
-            <i class="fas fa-chevron-left"></i>
+            <Icon icon="mdi:chevron-left" />
             {{ viewMode === 'day' ? '上一天' : '上一周' }}
           </button>
           <button class="nav-btn" @click="navigateNext">
             {{ viewMode === 'day' ? '下一天' : '下一周' }}
-            <i class="fas fa-chevron-right"></i>
+            <Icon icon="mdi:chevron-right" />
           </button>
         </div>
 
@@ -63,10 +63,10 @@
               </div>
               <div class="plan-actions">
                 <button class="action-btn edit-btn" @click="startEdit(plan)">
-                  <i class="fas fa-edit"></i>
+                  <Icon icon="mdi:pencil" />
                 </button>
                 <button class="action-btn delete-btn" @click="deletePlan(plan)">
-                  <i class="fas fa-trash"></i>
+                  <Icon icon="mdi:delete" />
                 </button>
                 <div class="completed-badge" v-if="plan.completed">已完成</div>
               </div>
@@ -86,10 +86,10 @@
               <div class="plan-content">{{ plan.content }}</div>
               <div class="plan-actions">
                 <button class="action-btn edit-btn" @click="startEdit(plan)">
-                  <i class="fas fa-edit"></i>
+                  <Icon icon="mdi:pencil" />
                 </button>
                 <button class="action-btn delete-btn" @click="deletePlan(plan)">
-                  <i class="fas fa-trash"></i>
+                  <Icon icon="mdi:delete" />
                 </button>
                 <div class="completed-badge" v-if="plan.completed">已完成</div>
               </div>
@@ -121,7 +121,7 @@
       </div>
 
       <button v-if="viewMode === 'day'" class="fab-button" @click="showAddModal = true">
-        <i class="fas fa-plus"></i>
+        <Icon icon="mdi:add" />
       </button>
     </main>
 
@@ -158,6 +158,7 @@
   import DatePicker from '../../../components/DatePicker.vue'
   import WeekPicker from '../../../components/WeekPicker.vue'
   import MobileLayout from '../components/MobileLayout.vue'
+  import { Icon } from '@iconify/vue'
 
   const router = useRouter()
   const userStore = useUserStore()
@@ -571,8 +572,10 @@
     color: var(--primary);
   }
 
-  .nav-btn i {
-    font-size: 12px;
+  .nav-btn :deep(.iconify) {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
   }
 
   .progress-section {
@@ -835,45 +838,59 @@
     transition: all 0.2s;
   }
 
-  .action-btn i {
+  .action-btn :deep(.iconify) {
     transition: all 0.2s;
     color: var(--text-secondary);
-    font-size: 16px;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
   }
 
-  .action-btn:hover i {
+  .action-btn:hover :deep(.iconify) {
     color: var(--primary);
   }
 
-  .save-btn i {
+  .save-btn :deep(.iconify) {
     color: var(--primary);
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
   }
 
-  .edit-btn i {
+  .edit-btn :deep(.iconify) {
     color: var(--primary);
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
   }
 
-  .cancel-btn i {
+  .cancel-btn :deep(.iconify) {
     color: var(--text-secondary);
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
   }
 
-  .delete-btn i {
+  .delete-btn :deep(.iconify) {
     color: var(--text-secondary);
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
   }
 
-  .save-btn:hover i {
+  .save-btn:hover :deep(.iconify) {
     color: var(--primary);
   }
 
-  .edit-btn:hover i {
+  .edit-btn:hover :deep(.iconify) {
     color: var(--primary);
   }
 
-  .cancel-btn:hover i {
+  .cancel-btn:hover :deep(.iconify) {
     color: var(--primary);
   }
 
-  .delete-btn:hover i {
+  .delete-btn:hover :deep(.iconify) {
     color: var(--error);
   }
 

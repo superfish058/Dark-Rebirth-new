@@ -22,13 +22,13 @@
           <span class="add-icon">+</span>
           添加网站
         </button>
-        <button class="edit-mode-btn" :class="{ active: isEditMode }" @click="toggleEditMode">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-          </svg>
-          编辑
-        </button>
+        <div class="edit-toggle">
+          <span class="edit-toggle-label">编辑</span>
+          <label class="switch">
+            <input type="checkbox" v-model="isEditMode" @change="toggleEditMode">
+            <span class="slider"></span>
+          </label>
+        </div>
       </div>
 
       <!-- 加载状态 -->
@@ -43,7 +43,7 @@
 
       <!-- 分类展示 -->
       <div v-else class="categories-container" :class="{ 'edit-mode': isEditMode }">
-        <div v-for="category in categories" :key="category.id" class="category">
+        <div v-for="category in categories" :key="category.id" class="category" v-show="category.id !== '999' || (category.websites && category.websites.length > 0)">
           <div class="category-header">
             <div class="category-title-container">
               <h3 class="category-title" v-if="!editingCategory || editingCategory.id !== category.id">{{ category.name }}</h3>
@@ -58,27 +58,33 @@
                 />
                 <div v-if="categoryNameError" class="category-error">{{ categoryNameError }}</div>
               </div>
-              <div v-if="isEditMode && (!editingCategory || editingCategory.id !== category.id) && category.id !== '0'" class="category-actions">
+              <div v-if="isEditMode && (!editingCategory || editingCategory.id !== category.id) && category.id !== '999'" class="category-actions">
                 <button class="category-edit-btn" @click.stop="editCategory(category)">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                   </svg>
                 </button>
-              </div>
-              <div v-else-if="isEditMode && editingCategory && editingCategory.id === category.id" class="category-actions">
-                <button class="category-save-btn" @click.stop="saveCategoryEdit">
+                <button class="category-delete-btn" @click.stop="openDeleteCategoryModal(category)">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </button>
-                <button class="category-cancel-btn" @click.stop="cancelCategoryEdit">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                   </svg>
                 </button>
               </div>
+              <div v-else-if="isEditMode && editingCategory && editingCategory.id === category.id && category.id !== '999'" class="category-actions">
+                  <button class="category-save-btn" @click.stop="saveCategoryEdit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </button>
+                  <button class="category-cancel-btn" @click.stop="cancelCategoryEdit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
             </div>
           </div>
           <div class="websites-container">
@@ -122,7 +128,7 @@
     </template>
 
     <!-- 添加网站对话框 -->
-    <div v-if="showAddDialog" class="dialog-overlay" @click="showAddDialog = false">
+    <div v-if="showAddDialog" class="dialog-overlay" @click="handleDialogOverlayClick">
       <div class="dialog-content" @click.stop>
         <div class="dialog-header">
           <h3>{{ editingWebsite ? '编辑网站' : '添加网站' }}</h3>
@@ -134,7 +140,7 @@
           </button>
         </div>
         <div class="dialog-body">
-          <form @submit.prevent="saveWebsite">
+          <form>
             <div class="form-group url-preview-row">
               <div class="url-input-container">
                 <label for="url">网页地址 *</label>
@@ -143,7 +149,6 @@
                   v-model="formData.url"
                   type="url"
                   placeholder="https://example.com"
-                  required
                   @input="updateIconPreview"
                 />
               </div>
@@ -161,7 +166,6 @@
                 v-model="formData.name"
                 type="text"
                 placeholder="网站名称"
-                required
                 @input="updateIconPreview"
               />
             </div>
@@ -170,6 +174,7 @@
               <label for="category">分类</label>
               <div class="category-selector">
                 <CustomSelect
+                  ref="categorySelectRef"
                   id="category"
                   v-model="formData.categoryId"
                   :options="categoryOptions"
@@ -232,7 +237,7 @@
               <button type="button" class="cancel-btn" @click="showAddDialog = false">
                 取消
               </button>
-              <button type="submit" class="save-btn">
+              <button type="button" class="save-btn" @click="saveWebsite">
                 {{ editingWebsite ? '保存' : '添加' }}
               </button>
             </div>
@@ -242,7 +247,7 @@
     </div>
 
     <!-- 添加分类对话框 -->
-    <div v-if="showAddCategory" class="dialog-overlay" @click="showAddCategory = false">
+    <div v-if="showAddCategory" class="dialog-overlay" @click="handleAddCategoryOverlayClick">
       <div class="dialog-content dialog-sm" @click.stop>
         <div class="dialog-header">
           <h3>添加分类</h3>
@@ -254,7 +259,7 @@
           </button>
         </div>
         <div class="dialog-body">
-          <form @submit.prevent="addCategory">
+          <form>
             <div class="form-group">
               <label for="categoryName">分类名称</label>
               <input
@@ -262,7 +267,6 @@
                 v-model="newCategoryName"
                 type="text"
                 placeholder="分类名称"
-                required
               />
             </div>
             <div class="dialog-footer">
@@ -272,6 +276,31 @@
               <button type="submit" class="save-btn">添加</button>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 删除分类确认弹框 -->
+    <div v-if="showDeleteCategoryModal" class="modal-overlay" @click.self="showDeleteCategoryModal = false">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title">删除分类</h2>
+          <button class="modal-close" @click="showDeleteCategoryModal = false">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p>确定要删除分类 "{{ categoryToDelete?.name }}" 吗？</p>
+          <p v-if="categoryToDelete?.websites?.length > 0" style="color: #f59e0b; margin-top: 8px;">
+            注意：该分类下有 {{ categoryToDelete.websites.length }} 个网站，删除后这些网站将被移动到默认分类。
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button class="cancel-btn" @click="showDeleteCategoryModal = false">取消</button>
+          <button class="delete-confirm-btn" @click="confirmDeleteCategory">删除</button>
         </div>
       </div>
     </div>
@@ -296,10 +325,13 @@ const editingWebsite = ref(null)
 const editingCategory = ref(null)
 const categoryNameError = ref('')
 const categoryInput = ref(null)
+const categorySelectRef = ref(null)
 const newCategoryName = ref('')
 const previewIcon = ref(null)
 const isEditMode = ref(false)
 const loading = ref(false)
+const showDeleteCategoryModal = ref(false)
+const categoryToDelete = ref(null)
 
 // 计算属性：是否登录
 const isLoggedIn = computed(() => userStore.isLoggedIn)
@@ -329,13 +361,17 @@ onMounted(() => {
 
 // 切换编辑模式
 function toggleEditMode() {
-  if (isEditMode.value) {
-    // 退出编辑模式时，取消正在编辑的标签
+  if (isEditMode.value === false) {
+    // 退出编辑模式时，取消正在编辑的分类
     if (editingCategory.value) {
       cancelCategoryEdit()
     }
+    // 退出编辑模式时，关闭添加/编辑网站对话框
+    if (showAddDialog.value) {
+      showAddDialog.value = false
+      resetForm()
+    }
   }
-  isEditMode.value = !isEditMode.value
 }
 
 // 颜色选项
@@ -355,13 +391,13 @@ const formData = ref({
   useOnlineIcon: false,
   onlineIconUrl: '',
   iconColor: '#0042a6',
-  categoryId: '0'
+  categoryId: '999'
 })
 
 // 监听分类变化，自动设置默认分类为默认值
 watch(categories, (newCategories) => {
   if (!formData.value.categoryId) {
-    formData.value.categoryId = '0' // 默认选择默认分类
+    formData.value.categoryId = '' // 默认为空
   }
 }, { immediate: true })
 
@@ -370,17 +406,32 @@ const totalWebsites = computed(() => {
   return categories.value.reduce((total, category) => total + category.websites.length, 0)
 })
 
-// 计算属性：分类选项（添加默认分类）
+// 计算属性：分类选项（直接使用后端返回的分类）
 const categoryOptions = computed(() => {
-  return [
-    { label: '默认分类', value: '0' },
-    ...categories.value.map(cat => ({ label: cat.name, value: cat.id }))
-  ]
+  return categories.value
+    .filter(cat => cat.id !== '999')
+    .map(cat => ({ label: cat.name, value: cat.id }))
 })
 
 // 处理分类选择变化
 function handleCategoryChange(option) {
   formData.value.categoryId = option.value
+}
+
+function handleDialogOverlayClick(event) {
+  const selectElement = event.target.closest('.custom-select')
+  if (!selectElement) {
+    if (categorySelectRef.value) {
+      categorySelectRef.value.closeDropdown()
+    }
+    showAddDialog.value = false
+    resetForm()
+  }
+}
+
+function handleAddCategoryOverlayClick() {
+  showAddCategory.value = false
+  newCategoryName.value = ''
 }
 
 // 获取网站所属的分类 ID
@@ -457,7 +508,7 @@ function editWebsite(website) {
     useOnlineIcon: website.useOnlineIcon || false,
     onlineIconUrl: website.icon ? website.icon : '',
     iconColor: website.iconColor || '#0042a6',
-    categoryId: category ? category.id : '0' // 默认选择默认分类
+    categoryId: category ? category.id : '' // 默认为空
   }
   updateIconPreview()
   showAddDialog.value = true
@@ -486,19 +537,24 @@ function generateFaviconUrl(url) {
 
 // 保存网站
 async function saveWebsite() {
+  if (!formData.value.url) {
+    notificationService.error('请填写网页地址')
+    return
+  }
+  if (!formData.value.name) {
+    notificationService.error('请填写网站名称')
+    return
+  }
   try {
-    // 处理默认分类
     const websiteData = {
       ...formData.value,
-      categoryId: formData.value.categoryId === '0' ? null : formData.value.categoryId
+      categoryId: !formData.value.categoryId || formData.value.categoryId === '999' ? null : formData.value.categoryId
     }
     if (editingWebsite.value) {
-      // 编辑现有网站
       await favoritesAPI.updateWebsite(editingWebsite.value.id, websiteData)
       await fetchFavorites()
       notificationService.success('网站更新成功')
     } else {
-      // 添加新网站
       await favoritesAPI.createWebsite(websiteData)
       await fetchFavorites()
       notificationService.success('网站添加成功')
@@ -512,18 +568,20 @@ async function saveWebsite() {
 
 // 添加分类
 async function addCategory() {
-  if (newCategoryName.value) {
-    try {
-      const response = await favoritesAPI.createCategory(newCategoryName.value)
-      const newCategory = response.data
-      categories.value.push(newCategory)
-      formData.value.categoryId = newCategory.id
-      showAddCategory.value = false
-      newCategoryName.value = ''
-      notificationService.success('分类添加成功')
-    } catch (error) {
-      // 错误处理由axios拦截器处理
-    }
+  if (!newCategoryName.value) {
+    notificationService.error('请填写分类名称')
+    return
+  }
+  try {
+    const response = await favoritesAPI.createCategory(newCategoryName.value)
+    const newCategory = response.data
+    categories.value.push(newCategory)
+    formData.value.categoryId = newCategory.id
+    showAddCategory.value = false
+    newCategoryName.value = ''
+    notificationService.success('分类添加成功')
+  } catch (error) {
+    // 错误处理由axios拦截器处理
   }
 }
 
@@ -538,7 +596,7 @@ function resetForm() {
     useOnlineIcon: false,
     onlineIconUrl: '',
     iconColor: '#0042a6',
-    categoryId: '0' // 默认选择默认分类
+    categoryId: '' // 默认为空，使用默认分类
   }
   previewIcon.value = null
   editingWebsite.value = null
@@ -571,6 +629,32 @@ function cancelCategoryEdit() {
   categoryNameError.value = ''
 }
 
+// 打开删除分类弹框
+function openDeleteCategoryModal(category) {
+  categoryToDelete.value = category
+  showDeleteCategoryModal.value = true
+}
+
+// 确认删除分类
+async function confirmDeleteCategory() {
+  if (!categoryToDelete.value) return
+  
+  try {
+    loading.value = true
+    await favoritesAPI.deleteCategory(categoryToDelete.value.id)
+    // 重新获取所有分类数据，确保默认分类的网站列表正确更新
+    await fetchFavorites()
+    showDeleteCategoryModal.value = false
+    categoryToDelete.value = null
+    notificationService.success('分类已删除')
+  } catch (error) {
+    console.error('删除分类失败:', error)
+    notificationService.error('删除分类失败')
+  } finally {
+    loading.value = false
+  }
+}
+
 // 验证分类名称
 function validateCategoryName() {
   if (editingCategory.value) {
@@ -588,7 +672,7 @@ function validateCategoryName() {
 async function saveCategoryEdit() {
   if (editingCategory.value) {
     // 检查是否是默认分类
-    if (editingCategory.value.id === '0') {
+    if (editingCategory.value.id === '999') {
       notificationService.error('默认分类不能编辑')
       editingCategory.value = null
       return
@@ -693,24 +777,67 @@ async function saveCategoryEdit() {
   box-shadow: 0 2px 8px rgba(0, 66, 166, 0.2);
 }
 
-.edit-mode-btn {
+.edit-toggle {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: #f8fafc;
-  color: #334155;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
+  gap: 8px;
 }
 
-.edit-mode-btn.active {
-  background: #e2e8f0;
-  color: #0042a6;
-  border-color: #0042a6;
+.edit-toggle-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: 0.3s;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  box-sizing: border-box;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+input:checked + .slider {
+  background-color: #0042a6;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
 }
 
 .add-icon {
@@ -753,6 +880,9 @@ async function saveCategoryEdit() {
   align-items: center;
   flex: 1;
   gap: 8px;
+  min-height: 32px;
+  height: 32px;
+  line-height: 32px;
 }
 
 .category-title {
@@ -771,13 +901,16 @@ async function saveCategoryEdit() {
 
 .category-edit-input {
   width: 100%;
-  padding: 6px 10px;
+  padding: 0 10px;
   border: 2px solid #0042a6;
   border-radius: 6px;
   font-size: 14px;
   font-weight: 600;
   color: #334155;
   background: white;
+  height: 32px;
+  line-height: 32px;
+  box-sizing: border-box;
 }
 
 .category-edit-btn {
@@ -796,6 +929,24 @@ async function saveCategoryEdit() {
 .category-edit-btn:hover {
   background: #f1f5f9;
   color: #0042a6;
+}
+
+.category-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.category-delete-btn:hover {
+  background: #fee2e2;
+  color: #ef4444;
 }
 
 .category-cancel-btn {
@@ -875,8 +1026,7 @@ async function saveCategoryEdit() {
   border-radius: 8px;
   border: 1px solid #e2e8f0;
   cursor: pointer;
-  min-width: 200px;
-  max-width: 220px;
+  width: 200px;
   transition: transform 0.2s ease;
   position: relative;
   z-index: 10;
@@ -1123,6 +1273,93 @@ async function saveCategoryEdit() {
   color: #64748b;
   margin: 0 0 32px 0;
   max-width: 400px;
+}
+
+/* 弹框样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 0;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 1px solid #e2e8f0;
+  animation: dialogSlideIn 0.3s ease;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  color: #1e293b;
+}
+
+.modal-body {
+  padding: 20px;
+  color: #475569;
+}
+
+.modal-body p {
+  margin: 0;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 20px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.delete-confirm-btn {
+  padding: 8px 16px;
+  background-color: #ef4444;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: white;
+}
+
+.delete-confirm-btn:hover {
+  background-color: #dc2626;
 }
 
 /* 对话框 */

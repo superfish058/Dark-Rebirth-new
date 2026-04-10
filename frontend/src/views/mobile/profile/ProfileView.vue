@@ -9,7 +9,7 @@
             {{ userStore.user?.username?.charAt(0).toUpperCase() || '?' }}
           </div>
           <div class="avatar-edit-icon">
-            <i class="fas fa-camera"></i>
+            <Icon icon="mdi:camera" />
           </div>
         </div>
         <div class="user-info">
@@ -51,7 +51,7 @@
                 <p class="function-description">更新你的邮箱地址</p>
               </div>
               <div class="function-arrow">
-                <i class="fas fa-chevron-right"></i>
+                <Icon icon="mdi:chevron-right" />
               </div>
             </div>
             <div class="function-item">
@@ -61,7 +61,7 @@
                 <p class="function-description">更改你的账户密码</p>
               </div>
               <div class="function-arrow">
-                <i class="fas fa-chevron-right"></i>
+                <Icon icon="mdi:chevron-right" />
               </div>
             </div>
           </div>
@@ -90,7 +90,7 @@
                 <p class="function-description">管理应用通知</p>
               </div>
               <div class="function-arrow">
-                <i class="fas fa-chevron-right"></i>
+                <Icon icon="mdi:chevron-right" />
               </div>
             </div>
           </div>
@@ -106,7 +106,7 @@
                 <p class="function-description">版本信息和使用说明</p>
               </div>
               <div class="function-arrow">
-                <i class="fas fa-chevron-right"></i>
+                <Icon icon="mdi:chevron-right" />
               </div>
             </div>
             <div class="function-item">
@@ -116,7 +116,7 @@
                 <p class="function-description">获取帮助和支持</p>
               </div>
               <div class="function-arrow">
-                <i class="fas fa-chevron-right"></i>
+                <Icon icon="mdi:chevron-right" />
               </div>
             </div>
           </div>
@@ -125,7 +125,7 @@
 
       <!-- 退出登录按钮 -->
       <button class="logout-button" @click="showLogoutModal = true">
-        <i class="fas fa-sign-out-alt"></i>
+        <Icon icon="mdi:logout" />
         <span>退出登录</span>
       </button>
 
@@ -144,6 +144,7 @@
   import { useUserStore } from '../../../stores/user'
   import MobileLayout from '../components/MobileLayout.vue'
   import Modal from '../../../components/Modal.vue'
+  import { Icon } from '@iconify/vue'
 
   const router = useRouter()
   const userStore = useUserStore()
@@ -259,6 +260,12 @@
     justify-content: center;
     color: white;
     border: 2px solid white;
+  }
+
+  .avatar-edit-icon :deep(.iconify) {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
   }
 
   .user-info h2 {
@@ -409,8 +416,11 @@
     margin: 0;
   }
 
-  .function-arrow {
+  .function-arrow :deep(.iconify) {
     color: var(--text-secondary);
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
   }
 
   .function-toggle {
@@ -479,6 +489,12 @@
     gap: 8px;
     transition: all 0.2s;
     margin-bottom: 32px;
+  }
+
+  .logout-button :deep(.iconify) {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
   }
 
 

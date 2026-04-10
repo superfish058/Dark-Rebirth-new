@@ -1,7 +1,7 @@
 <template>
   <div class="header-bar">
     <button v-if="showBack" class="back-btn" @click="goBack">
-      <i class="fas fa-arrow-left"></i>
+      <Icon icon="mdi:arrow-left" />
     </button>
     <div v-else class="left-space"></div>
     <h1 class="page-title" :style="{ color: titleColor }">{{ title }}</h1>
@@ -11,6 +11,7 @@
 
 <script setup>
   import { useRouter } from 'vue-router'
+  import { Icon } from '@iconify/vue'
 
   const props = defineProps({
     title: {
