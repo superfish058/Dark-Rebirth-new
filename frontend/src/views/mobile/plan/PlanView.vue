@@ -1,5 +1,5 @@
 <template>
-  <MobileLayout title="影途执记" :show-back="false">
+  <MobileLayout title="影途执策" :show-back="false">
     <div class="home-container">
       <main class="main-content">
       <div class="date-display">
@@ -32,7 +32,7 @@
 
         <div class="progress-section">
           <div class="progress-header">
-            <h3>影途执记情况</h3>
+            <h3>影途执策情况</h3>
             <span class="progress-info">{{ completedCount }}/{{ totalPlans }} 已完成 ({{ progressPercentage }}%)</span>
           </div>
           <div class="progress-bar">

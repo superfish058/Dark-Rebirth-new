@@ -5,7 +5,7 @@
       <div class="app-card" @click="navigateTo('/mobile/plan')">
         <div class="app-icon">📅</div>
         <div class="app-info">
-          <h3 class="app-name">影途执记</h3>
+          <h3 class="app-name">影途执策</h3>
           <p class="app-desc">管理你的日常任务和计划</p>
         </div>
       </div>

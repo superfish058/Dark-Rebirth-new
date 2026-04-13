@@ -48,7 +48,7 @@
       <div class="quick-actions-grid">
           <div class="quick-action-item" @click="navigateTo('/mobile/plan')">
             <div class="action-icon">📅</div>
-            <p class="action-label">影途执记</p>
+            <p class="action-label">影途执策</p>
           </div>
           <div class="quick-action-item" @click="showAddPlanModal = true">
             <div class="action-icon">➕</div>

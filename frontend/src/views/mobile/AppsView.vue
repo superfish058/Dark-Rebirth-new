@@ -12,7 +12,7 @@
             <div class="app-item" @click="navigateTo('/mobile/plan')">
               <div class="app-icon">📅</div>
               <div class="app-info">
-                <h5 class="app-name">影途执记</h5>
+                <h5 class="app-name">影途执策</h5>
                 <p class="app-description">管理每日和每周计划</p>
               </div>
               <div class="app-arrow">
@@ -45,7 +45,7 @@
               <div class="app-icon">📊</div>
               <div class="app-info">
                 <h5 class="app-name">数据分析</h5>
-                <p class="app-description">影途执记数据分析</p>
+                <p class="app-description">影途执策数据分析</p>
               </div>
               <div class="app-status">
                 <span class="status-badge">开发中</span>
