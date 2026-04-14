@@ -1,920 +1,1324 @@
 <template>
-  <MobileLayout title="影途执策" :show-back="false">
-    <div class="home-container">
-      <main class="main-content">
-      <div class="date-display">
-        <h2 class="current-date">{{ formattedDate }}</h2>
-        <button class="date-picker-btn" @click="showDatePicker">
-          <Icon icon="mdi:calendar" />
+    <div class="page-container">
+        <PageHeader title="影途执策" :sticky="true" :no-shadow="true" @back="goHome">
+            <template #actions>
+                <div class="profile-avatar">
+                    <img alt="User profile" :src="userStore.user?.avatar || defaultAvatar" />
+                </div>
+            </template>
+        </PageHeader>
+
+        <main class="main-content">
+            <!-- Day View -->
+            <section v-if="viewMode === 'day'" class="overview-card">
+                <div class="segmented-toggle">
+                    <button class="toggle-btn" :class="{ active: viewMode === 'day' }"
+                        @click="viewMode = 'day'">Daily</button>
+                    <button class="toggle-btn" :class="{ active: viewMode === 'week' }"
+                        @click="viewMode = 'week'">Weekly</button>
+                </div>
+
+                <div class="date-navigation">
+                    <button class="nav-button" @click="navigatePrevious">
+                        <span class="material-symbols-outlined">chevron_left</span>
+                        <span>{{ viewMode === 'day' ? '上一天' : '上一周' }}</span>
+                    </button>
+                    <div class="current-date">
+                        <span v-if="viewMode === 'day'" class="today-label">{{ dayOfWeek }}</span>
+                        <span v-else class="week-number">{{ weekNumber }}</span>
+                        <span class="date-value" v-if="viewMode === 'day'">{{ dayValue }}</span>
+                        <span v-else class="week-range">{{ weekRange }}</span>
+                    </div>
+                    <button class="nav-button" @click="navigateNext">
+                        <span>{{ viewMode === 'day' ? '下一天' : '下一周' }}</span>
+                        <span class="material-symbols-outlined">chevron_right</span>
+                    </button>
+                </div>
+
+                <div class="progress-section">
+                    <div class="progress-header">
+                        <label class="progress-label">{{ viewMode === 'day' ? '影途执策情况' : '本周完成进度' }}</label>
+                        <span class="progress-percentage">{{ progressPercentage }}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
+                    </div>
+                    <p class="progress-hint">{{ progressHint }}</p>
+                </div>
+            </section>
+
+            <!-- Week View -->
+            <section v-else class="overview-card">
+                <div class="segmented-toggle">
+                    <button class="toggle-btn" :class="{ active: viewMode === 'day' }"
+                        @click="viewMode = 'day'">Daily</button>
+                    <button class="toggle-btn" :class="{ active: viewMode === 'week' }"
+                        @click="viewMode = 'week'">Weekly</button>
+                </div>
+
+                <div class="date-navigation">
+                    <button class="nav-button" @click="navigatePrevious">
+                        <span class="material-symbols-outlined">chevron_left</span>
+                        <span>上一周</span>
+                    </button>
+                    <div class="current-date">
+                        <span class="week-number">{{ weekNumber }}</span>
+                        <span class="week-range">{{ weekRange }}</span>
+                    </div>
+                    <button class="nav-button" @click="navigateNext">
+                        <span>下一周</span>
+                        <span class="material-symbols-outlined">chevron_right</span>
+                    </button>
+                </div>
+
+                <div class="progress-section">
+                    <div class="progress-header">
+                        <label class="progress-label">本周完成进度</label>
+                        <span class="progress-percentage">{{ progressPercentage }}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
+                    </div>
+                    <p class="progress-hint">{{ progressHint }}</p>
+                </div>
+            </section>
+
+            <!-- Day View: History Incomplete -->
+            <section v-if="viewMode === 'day' && incompleteHistoryPlans.length > 0" class="task-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="indicator error"></span>
+                        历史未完成计划
+                    </h2>
+                    <span class="badge error-badge">{{ incompleteHistoryPlans.length }} Pending</span>
+                </div>
+                <div class="task-list">
+                    <div v-for="(plan, index) in incompleteHistoryPlans" :key="'history-' + plan.id" class="task-card">
+                        <div class="task-number">{{ String(index + 1).padStart(2, '0') }}</div>
+                        <button class="checkbox-button" :class="{ checked: plan.completed }"
+                            @click="toggleComplete(plan)">
+                            <span class="material-symbols-outlined" :class="{ unchecked: !plan.completed }">{{
+                                plan.completed ?
+                                'check_box' : 'check_box_outline_blank' }}</span>
+                        </button>
+                        <div class="task-content">
+                            <p class="task-title">{{ plan.content }}</p>
+                            <span class="task-date error">{{ formatDateLabel(plan.date) }}</span>
+                        </div>
+                        <div class="task-actions">
+                            <button class="action-btn" @click="startEdit(plan)">
+                                <span class="material-symbols-outlined">edit_note</span>
+                            </button>
+                            <button class="action-btn" @click="deletePlan(plan)">
+                                <span class="material-symbols-outlined">delete_outline</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Day View: Empty State -->
+            <section v-if="viewMode === 'day' && totalPlans === 0 && incompleteHistoryPlans.length === 0"
+                class="task-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="indicator primary"></span>
+                        正在进行计划
+                    </h2>
+                    <span class="badge secondary-badge">0 Tasks</span>
+                </div>
+            </section>
+
+            <!-- Day View: Ongoing -->
+            <section v-if="viewMode === 'day' && dayPlans.length > 0" class="task-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="indicator primary"></span>
+                        正在进行计划
+                    </h2>
+                    <span class="badge secondary-badge">{{ dayPlans.length }} Tasks</span>
+                </div>
+                <div class="task-list">
+                    <div v-for="(plan, index) in dayPlans" :key="plan.id" class="task-card"
+                        :class="{ completed: plan.completed }">
+                        <div class="task-number" :class="{ 'completed-num': plan.completed }">{{
+                            String(getHistoryCount() +
+                            index + 1).padStart(2, '0') }}</div>
+                        <button class="checkbox-button" :class="{ checked: plan.completed }"
+                            @click="toggleComplete(plan)">
+                            <span class="material-symbols-outlined" :class="{ unchecked: !plan.completed }">{{
+                                plan.completed ?
+                                'check_box' : 'check_box_outline_blank' }}</span>
+                        </button>
+                        <div class="task-content">
+                            <p class="task-title" :class="{ 'completed-text': plan.completed }">{{ plan.content }}</p>
+                            <span class="task-date" :class="{ 'completed-date': plan.completed }">{{
+                                formatDateLabel(plan.date)
+                                }}</span>
+                        </div>
+                        <div v-if="plan.completed" class="completed-badge">
+                            <span>已完成</span>
+                        </div>
+                        <div v-else class="task-actions">
+                            <button class="action-btn" @click="startEdit(plan)">
+                                <span class="material-symbols-outlined">edit_note</span>
+                            </button>
+                            <button class="action-btn" @click="deletePlan(plan)">
+                                <span class="material-symbols-outlined">delete_outline</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Week View: Weekly Tasks -->
+            <section v-if="viewMode === 'week'" class="week-task-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="indicator primary"></span>
+                        本周计划
+                    </h2>
+                    <span class="badge secondary-badge">{{ totalPlans }} Tasks</span>
+                </div>
+
+                <div v-for="(dayData, index) in weekDays" :key="index" class="week-day-group">
+                    <div class="week-day-header">
+                        <span class="day-dot" :class="{ primary: isToday(dayData.date) }"></span>
+                        <h3 class="week-day-title">{{ dayData.dayName }} · {{ formatWeekDay(dayData.date) }}</h3>
+                    </div>
+                    <div v-if="dayData.plans.length > 0" class="week-task-list">
+                        <div v-for="(plan, planIndex) in dayData.plans" :key="plan.id" class="week-task-card"
+                            :class="{ completed: plan.completed }">
+                            <div class="week-task-number">{{ String(getWeekTaskNumber(index, planIndex)).padStart(2,
+                                '0') }}
+                            </div>
+                            <div class="week-task-content">
+                                <p class="week-task-title">{{ plan.content }}</p>
+                            </div>
+                            <span v-if="plan.completed" class="week-task-badge">已完成</span>
+                        </div>
+                    </div>
+                    <div v-else class="week-empty-card">
+                        <span class="material-symbols-outlined">calendar_today</span>
+                        <p>该日无计划</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <button v-if="viewMode === 'day'" class="fab-button" @click="showAddModal = true">
+            <span class="material-symbols-outlined">add</span>
         </button>
-      </div>
-      
-      <div class="overview-container">
-        <div class="view-toggle">
-          <button class="toggle-btn" :class="{ active: viewMode === 'day' }" @click="viewMode = 'day'">
-            每日
-          </button>
-          <button class="toggle-btn" :class="{ active: viewMode === 'week' }" @click="viewMode = 'week'">
-            每周
-          </button>
-        </div>
 
-        <div class="nav-buttons">
-          <button class="nav-btn" @click="navigatePrevious">
-            <Icon icon="mdi:chevron-left" />
-            {{ viewMode === 'day' ? '上一天' : '上一周' }}
-          </button>
-          <button class="nav-btn" @click="navigateNext">
-            {{ viewMode === 'day' ? '下一天' : '下一周' }}
-            <Icon icon="mdi:chevron-right" />
-          </button>
-        </div>
+        <nav class="bottom-nav">
+            <a class="nav-item active" href="#">
+                <span class="material-symbols-outlined filled">home</span>
+                <span class="nav-label">首页</span>
+            </a>
+            <a class="nav-item" href="#">
+                <span class="material-symbols-outlined">grid_view</span>
+                <span class="nav-label">应用</span>
+            </a>
+            <a class="nav-item" href="#">
+                <span class="material-symbols-outlined">person</span>
+                <span class="nav-label">我的</span>
+            </a>
+        </nav>
 
-        <div class="progress-section">
-          <div class="progress-header">
-            <h3>影途执策情况</h3>
-            <span class="progress-info">{{ completedCount }}/{{ totalPlans }} 已完成 ({{ progressPercentage }}%)</span>
-          </div>
-          <div class="progress-bar">
-            <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="totalPlans === 0 && incompleteHistoryPlans.length === 0 && viewMode === 'day'" class="empty-state">
-        <div class="empty-icon">📝</div>
-        <p>今天还没有计划</p>
-        <p class="empty-hint">点击下方按钮添加你的第一个计划吧！</p>
-      </div>
-
-      <div v-else>
-        <div v-if="incompleteHistoryPlans.length > 0&&viewMode === 'day'" class="history-plans-section">
-          <div class="history-header">
-            <h4 class="history-title">历史未完成计划</h4>
-          </div>
-          <div class="plans-list">
-            <div v-for="(plan, index) in incompleteHistoryPlans" :key="'history-' + plan.id"
-              class="plan-item history-plan">
-              <div class="plan-number">{{ index + 1 }}</div>
-              <input type="checkbox" :checked="plan.completed" @change="toggleComplete(plan)" class="plan-checkbox" />
-              <div class="plan-content">
-                <div class="plan-text">{{ plan.content }}</div>
-                <div class="plan-date-badge">{{ formatDateLabel(plan.date) }}</div>
-              </div>
-              <div class="plan-actions">
-                <button class="action-btn edit-btn" @click="startEdit(plan)">
-                  <Icon icon="mdi:pencil" />
-                </button>
-                <button class="action-btn delete-btn" @click="deletePlan(plan)">
-                  <Icon icon="mdi:delete" />
-                </button>
-                <div class="completed-badge" v-if="plan.completed">已完成</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="viewMode === 'day'">
-          <div class="history-header" v-if="dayPlans.length > 0">
-            <h4 class="history-title">正在进行计划</h4>
-          </div>
-          <div v-if="dayPlans.length > 0" class="plans-list">
-            <div v-for="(plan, index) in dayPlans" :key="plan.id" class="plan-item"
-              :class="{ completed: plan.completed }">
-              <div class="plan-number">{{ index + 1 }}</div>
-              <input type="checkbox" :checked="plan.completed" @change="toggleComplete(plan)" class="plan-checkbox" />
-              <div class="plan-content">{{ plan.content }}</div>
-              <div class="plan-actions">
-                <button class="action-btn edit-btn" @click="startEdit(plan)">
-                  <Icon icon="mdi:pencil" />
-                </button>
-                <button class="action-btn delete-btn" @click="deletePlan(plan)">
-                  <Icon icon="mdi:delete" />
-                </button>
-                <div class="completed-badge" v-if="plan.completed">已完成</div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        <div v-else class="week-view">
-          <div class="week-days-container">
-            <div v-for="(dayData, index) in weekDays" :key="index" class="week-column">
-              <div class="week-header" :class="{ today: isToday(dayData.date) }">
-                <div class="day-name">{{ dayData.dayName }}</div>
-              </div>
-              <div class="day-plans">
-                <div v-if="dayData.plans.length > 0" class="week-plan-list">
-                  <div v-for="plan in dayData.plans" :key="plan.id" class="week-plan-item"
-                    :class="{ completed: plan.completed }">
-                    <div class="week-plan-content">{{ plan.content }}</div>
-                  </div>
+        <div v-if="showAddModal" class="modal-overlay" @click.self="closeModal">
+            <div class="modal-content">
+                <h3>添加新计划</h3>
+                <textarea v-model="newPlanContent" class="add-plan-textarea" placeholder="写下你的计划..." rows="2"
+                    @keyup.enter.ctrl="addPlan" ref="addInput"></textarea>
+                <div class="modal-actions">
+                    <button class="modal-btn cancel-btn" @click="closeModal">取消</button>
+                    <button class="modal-btn confirm-btn" @click="addPlan">添加</button>
                 </div>
-                <div v-else class="no-plans">
-                  无计划
-                </div>
-              </div>
             </div>
-          </div>
         </div>
-      </div>
 
-      <button v-if="viewMode === 'day'" class="fab-button" @click="showAddModal = true">
-        <Icon icon="mdi:add" />
-      </button>
-    </main>
+        <div v-if="showEditModal" class="modal-overlay" @click.self="cancelEdit">
+            <div class="modal-content">
+                <h3>编辑计划</h3>
+                <textarea v-model="editContent" class="edit-textarea" placeholder="编辑你的计划..." rows="2"
+                    ref="editTextarea"></textarea>
+                <div class="modal-actions">
+                    <button class="modal-btn cancel-btn" @click="cancelEdit">取消</button>
+                    <button class="modal-btn confirm-btn" @click="saveEdit">保存</button>
+                </div>
+            </div>
+        </div>
 
-    <Modal v-model:visible="showAddModal" title="添加新计划" size="large" @close="closeModal" @cancel="closeModal"
-      @confirm="addPlan" :confirm-text="'添加'" :cancel-text="'取消'">
-      <textarea v-model="newPlanContent" class="input-hand-drawn add-plan-textarea" placeholder="写下你的计划..." rows="2"
-        @keyup.enter.ctrl="addPlan" ref="addInput"></textarea>
-    </Modal>
-
-
-
-    <Modal v-model:visible="showDeleteModal" title="删除计划" size="small" @close="cancelDelete" @cancel="cancelDelete"
-      @confirm="confirmDelete" :confirm-text="'删除'" :cancel-text="'取消'">
-      <p class="delete-message">确定要删除这个计划吗？</p>
-    </Modal>
-
-    <Modal v-model:visible="showEditModal" title="编辑计划" size="large" @close="cancelEdit" @cancel="cancelEdit"
-      @confirm="saveEdit" :confirm-text="'保存'" :cancel-text="'取消'">
-      <textarea v-model="editContent" class="input-hand-drawn edit-textarea" placeholder="编辑你的计划..." rows="2" ref="editTextarea"></textarea>
-    </Modal>
-
-    <DatePicker v-model:visible="showDatePickerModal" :model-value="currentDate" @confirm="handleDateSelect" />
-
-    <WeekPicker v-model:visible="showWeekPickerModal" :model-value="currentDate" @confirm="handleWeekSelect" />
+        <div v-if="showDeleteModal" class="modal-overlay" @click.self="cancelDelete">
+            <div class="modal-content">
+                <h3>删除计划</h3>
+                <p class="delete-message">确定要删除这个计划吗？</p>
+                <div class="modal-actions">
+                    <button class="modal-btn cancel-btn" @click="cancelDelete">取消</button>
+                    <button class="modal-btn confirm-btn delete-confirm" @click="confirmDelete">删除</button>
+                </div>
+            </div>
+        </div>
     </div>
-  </MobileLayout>
 </template>
 
 <script setup>
-  import { ref, computed, onMounted, nextTick, watch } from 'vue'
-  import { useRouter } from 'vue-router'
-  import { useUserStore } from '../../../stores/user'
-  import Modal from '../../../components/Modal.vue'
-  import DatePicker from '../../../components/DatePicker.vue'
-  import WeekPicker from '../../../components/WeekPicker.vue'
-  import MobileLayout from '../components/MobileLayout.vue'
-  import { Icon } from '@iconify/vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '../../../stores/user'
+import PageHeader from '../../../components/PageHeader.vue'
 
-  const router = useRouter()
-  const userStore = useUserStore()
+const router = useRouter()
+const userStore = useUserStore()
 
-  const viewMode = ref('day')
-  const currentDate = ref(getBeijingTime(new Date()))
-  const dayPlans = ref([])
-  const allPlans = ref([])
-  const showAddModal = ref(false)
-  const newPlanContent = ref('')
-  const editingPlanId = ref(null)
-  const editContent = ref('')
-  const addInput = ref(null)
-  const editInput = ref(null)
-  const editTextarea = ref(null)
-  const showDeleteModal = ref(false)
-  const showEditModal = ref(false)
-  const currentPlan = ref(null)
-  const showDatePickerModal = ref(false)
-  const showWeekPickerModal = ref(false)
+function goHome() {
+    router.push('/mobile')
+}
 
-  function getBeijingTime(date) {
+const defaultAvatar = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDSGN0Cm9Bxf1dh4sgXge21tfxPoA1zS4UJrOAZ0NdLM2CFGR4FElhuCJkTwiCmu_NAvIxXk7cj09ebPXoKJnPIlha0R4tpO0ewejnJRFLe4KDx7w1zv5XrXW8dOQCRrXAJgf5IBTrt7fGb4BcFrjcn5AmGPk1cHLgou6ONPBrDeNkZNXQlnyDab2SGV5lO2kRKqhkkqJGkOEyTxXodNJKfzzfQan-gGiSo_uyoDZJXIm5qFJOCet_YntMz6OgVwDWR4obhSWOk_Eo'
+
+const viewMode = ref('day')
+const currentDate = ref(getBeijingTime(new Date()))
+const dayPlans = ref([])
+const allPlans = ref([])
+const showAddModal = ref(false)
+const newPlanContent = ref('')
+const editingPlanId = ref(null)
+const editContent = ref('')
+const addInput = ref(null)
+const editTextarea = ref(null)
+const showDeleteModal = ref(false)
+const showEditModal = ref(false)
+const currentPlan = ref(null)
+
+function getBeijingTime(date) {
     const beijingOffset = 8 * 60 * 60 * 1000
     const localOffset = date.getTimezoneOffset() * 60 * 1000
     return new Date(date.getTime() + localOffset + beijingOffset)
-  }
+}
 
-  function formatDate(date) {
+function formatDate(date) {
     const d = getBeijingTime(date)
     const year = d.getFullYear()
     const month = String(d.getMonth() + 1).padStart(2, '0')
     const day = String(d.getDate()).padStart(2, '0')
     return `${year}-${month}-${day}`
-  }
+}
 
-  function formatDateLabel(dateStr) {
+function formatDateLabel(dateStr) {
     if (!dateStr) return ''
     const d = new Date(dateStr)
     const options = { month: 'short', day: 'numeric' }
     return d.toLocaleDateString('zh-CN', options)
-  }
+}
 
-  const weekDays = computed(() => {
+const weekDays = computed(() => {
     const days = []
     const dayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
     const startOfWeek = getWeekStart(getBeijingTime(currentDate.value))
 
     for (let i = 0; i < 7; i++) {
-      const date = new Date(startOfWeek)
-      date.setDate(startOfWeek.getDate() + i)
-      const dateStr = formatDate(date)
-      const plans = allPlans.value.filter(p => p.date === dateStr)
-      days.push({
-        date,
-        dayName: dayNames[i],
-        plans
-      })
+        const date = new Date(startOfWeek)
+        date.setDate(startOfWeek.getDate() + i)
+        const dateStr = formatDate(date)
+        const plans = allPlans.value.filter(p => p.date === dateStr)
+        days.push({
+            date,
+            dayName: dayNames[i],
+            plans
+        })
     }
     return days
-  })
+})
 
-  function getWeekStart(date) {
+function getWeekStart(date) {
     const d = getBeijingTime(date)
     const day = d.getDay()
     const diff = d.getDate() - day + (day === 0 ? -6 : 1)
     return new Date(d.setDate(diff))
-  }
+}
 
-  function isToday(date) {
+function isToday(date) {
     const today = getBeijingTime(new Date())
     const d = getBeijingTime(date)
     return formatDate(today) === formatDate(d)
-  }
+}
 
-  const completedCount = computed(() => {
+const completedCount = computed(() => {
     if (viewMode.value === 'day') {
-      return dayPlans.value.filter(p => p.completed).length
+        return dayPlans.value.filter(p => p.completed).length
     } else {
-      const allWeekPlans = weekDays.value.flatMap(d => d.plans)
-      return allWeekPlans.filter(p => p.completed).length
+        const allWeekPlans = weekDays.value.flatMap(d => d.plans)
+        return allWeekPlans.filter(p => p.completed).length
     }
-  })
+})
 
-  const totalPlans = computed(() => {
+const totalPlans = computed(() => {
     if (viewMode.value === 'day') {
-      return dayPlans.value.length
+        return dayPlans.value.length
     } else {
-      return weekDays.value.flatMap(d => d.plans).length
+        return weekDays.value.flatMap(d => d.plans).length
     }
-  })
+})
 
-  const progressPercentage = computed(() => {
+const progressPercentage = computed(() => {
     if (totalPlans.value === 0) return 0
     return Math.round((completedCount.value / totalPlans.value) * 100)
-  })
+})
 
-  const incompleteHistoryPlans = computed(() => {
+const progressHint = computed(() => {
+    if (totalPlans.value === 0) {
+        return '还没有计划，点击下方添加'
+    }
+    if (completedCount.value === totalPlans.value) {
+        return '太棒了！任务已全部完成'
+    }
+    const remaining = totalPlans.value - completedCount.value
+    return `还有 ${remaining} 个任务待完成，加油！`
+})
+
+const incompleteHistoryPlans = computed(() => {
     const currentDateStr = formatDate(getBeijingTime(currentDate.value))
     return allPlans.value
-      .filter(plan => {
-        if (!plan.date) return false
-        return plan.date < currentDateStr && !plan.completed
-      })
-      .sort((a, b) => new Date(a.date) - new Date(b.date))
-  })
+        .filter(plan => {
+            if (!plan.date) return false
+            return plan.date < currentDateStr && !plan.completed
+        })
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+})
 
-  const formattedDate = computed(() => {
+const formattedDate = computed(() => {
     const d = getBeijingTime(currentDate.value)
-    if (viewMode.value === 'day') {
-      const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }
-      return d.toLocaleDateString('zh-CN', options)
-    } else {
-      const weekStart = getWeekStart(d)
-      const weekEnd = new Date(weekStart)
-      weekEnd.setDate(weekStart.getDate() + 6)
-      const options = { year: 'numeric', month: 'long', day: 'numeric' }
-      return `${weekStart.toLocaleDateString('zh-CN', options)} - ${weekEnd.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })}`
+    const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }
+    return d.toLocaleDateString('zh-CN', options)
+})
+
+const dayOfWeek = computed(() => {
+    const d = getBeijingTime(currentDate.value)
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    return dayNames[d.getDay()]
+})
+
+const dayValue = computed(() => {
+    const d = getBeijingTime(currentDate.value)
+    const month = d.getMonth() + 1
+    const day = d.getDate()
+    return `${month}月${day}日`
+})
+
+const weekNumber = computed(() => {
+    const d = getBeijingTime(currentDate.value)
+    const startOfYear = new Date(d.getFullYear(), 0, 1)
+    const days = Math.floor((d.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000))
+    const weekNum = Math.ceil((days + startOfYear.getDay() + 1) / 7)
+    return `第${weekNum}周`
+})
+
+const weekRange = computed(() => {
+    const d = getBeijingTime(currentDate.value)
+    const weekStart = getWeekStart(d)
+    const weekEnd = new Date(weekStart)
+    weekEnd.setDate(weekStart.getDate() + 6)
+    const startMonth = weekStart.getMonth() + 1
+    const startDay = weekStart.getDate()
+    const endMonth = weekEnd.getMonth() + 1
+    const endDay = weekEnd.getDate()
+    return `${String(startMonth).padStart(2, '0')}-${String(startDay).padStart(2, '0')} — ${String(endMonth).padStart(2, '0')}-${String(endDay).padStart(2, '0')}`
+})
+
+function formatWeekDay(date) {
+    const d = getBeijingTime(date)
+    const month = d.getMonth() + 1
+    const day = d.getDate()
+    return `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+}
+
+function getWeekTaskNumber(dayIndex, planIndex) {
+    let count = 1
+    for (let i = 0; i < dayIndex; i++) {
+        count += weekDays.value[i].plans.length
     }
-  })
+    return count + planIndex
+}
 
-  function showDatePicker() {
-    if (viewMode.value === 'day') {
-      showDatePickerModal.value = true
-    } else {
-      showWeekPickerModal.value = true
+function getHistoryCount() {
+    return incompleteHistoryPlans.value.length
+}
+
+function showDatePicker() {
+    const dateStr = prompt('请输入日期 (YYYY-MM-DD)', formatDate(getBeijingTime(currentDate.value)))
+    if (dateStr) {
+        const newDate = new Date(dateStr)
+        if (!isNaN(newDate.getTime())) {
+            currentDate.value = getBeijingTime(newDate)
+            loadPlansForCurrentView()
+        }
     }
-  }
+}
 
-  function handleDateSelect(date) {
-    currentDate.value = getBeijingTime(date)
-    loadPlansForCurrentView()
-  }
-
-  function handleWeekSelect(date) {
-    currentDate.value = getBeijingTime(date)
-    loadPlansForCurrentView()
-  }
-
-  function navigatePrevious() {
+function navigatePrevious() {
     if (viewMode.value === 'day') {
-      currentDate.value = getBeijingTime(new Date(currentDate.value.getTime() - 24 * 60 * 60 * 1000))
+        currentDate.value = getBeijingTime(new Date(currentDate.value.getTime() - 24 * 60 * 60 * 1000))
     } else {
-      currentDate.value = getBeijingTime(new Date(currentDate.value.getTime() - 7 * 24 * 60 * 60 * 1000))
+        currentDate.value = getBeijingTime(new Date(currentDate.value.getTime() - 7 * 24 * 60 * 60 * 1000))
     }
     loadPlansForCurrentView()
-  }
+}
 
-  function navigateNext() {
+function navigateNext() {
     if (viewMode.value === 'day') {
-      currentDate.value = getBeijingTime(new Date(currentDate.value.getTime() + 24 * 60 * 60 * 1000))
+        currentDate.value = getBeijingTime(new Date(currentDate.value.getTime() + 24 * 60 * 60 * 1000))
     } else {
-      currentDate.value = getBeijingTime(new Date(currentDate.value.getTime() + 7 * 24 * 60 * 60 * 1000))
+        currentDate.value = getBeijingTime(new Date(currentDate.value.getTime() + 7 * 24 * 60 * 60 * 1000))
     }
     loadPlansForCurrentView()
-  }
+}
 
-  async function loadPlansForCurrentView() {
+async function loadPlansForCurrentView() {
     try {
-      if (viewMode.value === 'day') {
-        const dateStr = formatDate(getBeijingTime(currentDate.value))
-        const plans = await userStore.getPlansByDate(dateStr)
-        dayPlans.value = plans
-        allPlans.value = await userStore.getIncompletePlans()
-      } else {
-        const weekStart = getWeekStart(getBeijingTime(currentDate.value))
-        const weekStartStr = formatDate(weekStart)
-        const weekData = await userStore.getPlansByWeek(weekStartStr)
-        allPlans.value = weekData
-      }
+        if (viewMode.value === 'day') {
+            const dateStr = formatDate(getBeijingTime(currentDate.value))
+            const plans = await userStore.getPlansByDate(dateStr)
+            dayPlans.value = plans
+            allPlans.value = await userStore.getIncompletePlans()
+        } else {
+            const weekStart = getWeekStart(getBeijingTime(currentDate.value))
+            const weekStartStr = formatDate(weekStart)
+            const weekData = await userStore.getPlansByWeek(weekStartStr)
+            allPlans.value = weekData
+        }
     } catch (err) {
-      console.error('加载计划失败', err)
+        console.error('加载计划失败', err)
     }
-  }
+}
 
-  async function loadPlans() {
+async function loadPlans() {
     try {
-      await loadPlansForCurrentView()
+        await loadPlansForCurrentView()
     } catch (err) {
-      console.error('加载计划失败', err)
+        console.error('加载计划失败', err)
     }
-  }
+}
 
-  async function addPlan() {
+async function addPlan() {
     if (!newPlanContent.value.trim()) return
 
     try {
-      const dateStr = viewMode.value === 'day' ? formatDate(getBeijingTime(currentDate.value)) : null
-      const plan = await userStore.createPlan(newPlanContent.value, dateStr)
-      if (viewMode.value === 'day') {
-        dayPlans.value.push(plan)
-      }
-      allPlans.value.push(plan)
-      newPlanContent.value = ''
-      showAddModal.value = false
+        const dateStr = viewMode.value === 'day' ? formatDate(getBeijingTime(currentDate.value)) : null
+        const plan = await userStore.createPlan(newPlanContent.value, dateStr)
+        if (viewMode.value === 'day') {
+            dayPlans.value.push(plan)
+        }
+        allPlans.value.push(plan)
+        newPlanContent.value = ''
+        showAddModal.value = false
     } catch (err) {
-      console.error('添加计划失败', err)
+        console.error('添加计划失败', err)
     }
-  }
+}
 
-  function startEdit(plan) {
+function startEdit(plan) {
     currentPlan.value = plan
     editContent.value = plan.content
     showEditModal.value = true
     nextTick(() => {
-      editTextarea.value?.focus()
+        editTextarea.value?.focus()
     })
-  }
+}
 
-  async function saveEdit() {
+async function saveEdit() {
     if (!editContent.value.trim() || !currentPlan.value) return
 
     try {
-      await userStore.updatePlan(currentPlan.value.id, editContent.value)
-      currentPlan.value.content = editContent.value
-      showEditModal.value = false
-      editContent.value = ''
-      currentPlan.value = null
+        await userStore.updatePlan(currentPlan.value.id, editContent.value)
+        currentPlan.value.content = editContent.value
+        showEditModal.value = false
+        editContent.value = ''
+        currentPlan.value = null
     } catch (err) {
-      console.error('更新计划失败', err)
+        console.error('更新计划失败', err)
     }
-  }
+}
 
-  function cancelEdit() {
+function cancelEdit() {
     showEditModal.value = false
     editContent.value = ''
     currentPlan.value = null
-  }
+}
 
-  function closeModal() {
+function closeModal() {
     newPlanContent.value = ''
     showAddModal.value = false
-  }
+}
 
-  function deletePlan(plan) {
+function deletePlan(plan) {
     currentPlan.value = plan
     showDeleteModal.value = true
-  }
+}
 
-  async function confirmDelete() {
+async function confirmDelete() {
     if (!currentPlan.value) return
 
     try {
-      await userStore.deletePlan(currentPlan.value.id)
-      dayPlans.value = dayPlans.value.filter(p => p.id !== currentPlan.value.id)
-      allPlans.value = allPlans.value.filter(p => p.id !== currentPlan.value.id)
-      showDeleteModal.value = false
-      currentPlan.value = null
+        await userStore.deletePlan(currentPlan.value.id)
+        dayPlans.value = dayPlans.value.filter(p => p.id !== currentPlan.value.id)
+        allPlans.value = allPlans.value.filter(p => p.id !== currentPlan.value.id)
+        showDeleteModal.value = false
+        currentPlan.value = null
     } catch (err) {
-      console.error('删除计划失败', err)
-      showDeleteModal.value = false
-      currentPlan.value = null
+        console.error('删除计划失败', err)
+        showDeleteModal.value = false
+        currentPlan.value = null
     }
-  }
+}
 
-  function cancelDelete() {
+function cancelDelete() {
     showDeleteModal.value = false
     currentPlan.value = null
-  }
+}
 
-  async function toggleComplete(plan) {
+async function toggleComplete(plan) {
     try {
-      await userStore.toggleComplete(plan.id, !plan.completed)
-      plan.completed = !plan.completed
+        await userStore.toggleComplete(plan.id, !plan.completed)
+        plan.completed = !plan.completed
     } catch (err) {
-      console.error('更新计划状态失败', err)
+        console.error('更新计划状态失败', err)
     }
-  }
+}
 
-
-
-  watch(viewMode, () => {
+watch(viewMode, () => {
     loadPlansForCurrentView()
-  })
+})
 
-  onMounted(() => {
+onMounted(() => {
     loadPlans()
-  })
+})
 
-  watch(showAddModal, (val) => {
+watch(showAddModal, (val) => {
     if (val) {
-      nextTick(() => {
-        addInput.value?.focus()
-      })
+        nextTick(() => {
+            addInput.value?.focus()
+        })
     }
-  })
+})
 </script>
 
 <style scoped>
-  .home-container {
-    min-height: 100%;
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.page-container {
+    min-height: 100vh;
+    background-color: #f8faf8;
+    color: #2a3432;
+    font-family: 'Manrope', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    padding-bottom: 100px;
+}
+
+.top-appbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    height: 56px;
+    background-color: rgba(248, 250, 248, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(218, 229, 225, 0.5);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.title-section {
     display: flex;
     flex-direction: column;
-    padding-bottom: 80px;
-  }
-
-  .main-content {
     flex: 1;
-    max-width: 900px;
-    margin: 0 auto;
-    width: 100%;
-    position: relative;
-  }
+}
 
-  .date-display {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-  }
-
-  .current-date {
+.app-title {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
     font-size: 18px;
-    font-weight: 600;
-    color: var(--text-primary);
+    line-height: 1.2;
+    color: #2D5A27;
+    text-align: center;
     margin: 0;
-  }
+}
 
-  .date-picker-btn {
-    width: 40px;
-    height: 40px;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    background: white;
-    color: var(--text-primary);
-    cursor: pointer;
+.date-label {
+    font-size: 10px;
+    color: #57615f;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #dae5e1;
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
-    transition: all 0.2s;
-  }
-
-  .date-picker-btn:hover {
-    border-color: var(--primary);
-    background: var(--bg-secondary);
-    color: var(--primary);
-  }
-
-  .overview-container {
-    background: white;
-    border-radius: 12px;
-    border: 2px solid var(--border);
-    padding: 16px;
-    margin-bottom: 24px;
-  }
-
-  .view-toggle {
-    display: flex;
-    gap: 4px;
-    background: var(--bg-secondary);
-    border-radius: 4px;
-    flex-wrap: nowrap;
-    border: 2px solid var(--border);
-    overflow: hidden;
-    margin-bottom: 12px;
-  }
-
-  .toggle-btn {
-    flex: 1;
-    padding: 6px 10px;
-    border: none;
-    border-radius: 2px;
-    background: transparent;
-    color: var(--text-secondary);
     cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    transition: all 0.2s;
-    white-space: nowrap;
-  }
+}
 
-  .toggle-btn:hover {
-    color: var(--primary);
-  }
-
-  .toggle-btn.active {
-    background: var(--primary);
-    color: white;
-  }
-
-  .nav-buttons {
-    display: flex;
-    flex-direction: row;
-    gap: 6px;
+.profile-avatar img {
     width: 100%;
-    margin-bottom: 16px;
-  }
-
-  .nav-btn {
-    padding: 8px 12px;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    background: white;
-    color: var(--text-primary);
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    flex: 1;
-    min-width: 0;
-    font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
-  }
-
-  .nav-btn:hover {
-    border-color: var(--primary);
-    background: var(--bg-secondary);
-    color: var(--primary);
-  }
-
-  .nav-btn :deep(.iconify) {
-    font-size: 14px;
-    width: 14px;
-    height: 14px;
-  }
-
-  .progress-section {
-    width: 100%;
-  }
-
-  .progress-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-  }
-
-  .progress-header h3 {
-    margin: 0;
-    font-size: 16px;
-    color: var(--text-primary);
-    font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
-  }
-
-  .progress-info {
-    font-size: 14px;
-    color: var(--text-secondary);
-    font-weight: bold;
-  }
-
-  .progress-bar {
-    width: 100%;
-    height: 12px;
-    background: var(--bg-secondary);
-    border-radius: 6px;
-    overflow: hidden;
-    border: 2px solid var(--border);
-  }
-
-  .progress-fill {
     height: 100%;
-    background: var(--primary);
-    border-radius: 4px;
-    transition: width 0.5s ease;
-    box-shadow: 2px 0 0 rgba(0, 0, 0, 0.1);
-  }
+    object-fit: cover;
+}
 
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-  }
-
-  .empty-icon {
-    font-size: 64px;
-    margin-bottom: 16px;
-  }
-
-  .empty-state p {
-    color: var(--text-secondary);
-    font-size: 16px;
-    margin: 8px 0;
-  }
-
-  .empty-hint {
-    font-size: 14px;
-  }
-
-  .empty-day-plans {
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--text-secondary);
-  }
-
-  .history-plans-section {
-    margin-bottom: 20px;
-  }
-
-  .history-header {
-    margin-bottom: 12px;
-  }
-
-  .history-title {
-    margin: 0;
-    font-size: 16px;
-    color: var(--text-secondary);
-    font-weight: 600;
-  }
-
-  .plans-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .plan-item {
-    background: white;
-    padding: 12px 16px;
-    border-radius: 12px;
-    border: 2px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: all 0.2s;
-    min-height: 56px;
-  }
-
-  .plan-item.history-plan {
-    border-color: var(--error);
-    background: #FFF5F5;
-  }
-
-  .plan-item:hover {
-    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
-  }
-
-  .plan-item.completed {
-    opacity: 0.9;
-    border-color: var(--primary);
-    background: var(--bg-secondary);
-    position: relative;
-    min-height: 56px;
-  }
-
-  .plan-actions {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
-    width: 80px;
-    height: 36px;
-    align-items: center;
-    justify-content: flex-start;
-  }
-
-  .plan-item.completed .plan-actions {
-    justify-content: flex-end;
-  }
-
-  .plan-item.completed .action-btn {
-    display: none;
-  }
-
-  .completed-badge {
-    background: var(--primary);
-    color: white;
-    padding: 4px 12px;
-    border-radius: 16px;
-    font-size: 12px;
-    font-weight: bold;
-    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
-    animation: slideIn 0.3s ease;
-    height: 24px;
+.icon-button {
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  @keyframes slideIn {
-    from {
-      transform: translateX(20px);
-      opacity: 0;
-    }
-
-    to {
-      transform: translateX(0);
-      opacity: 1;
-    }
-  }
-
-  .plan-checkbox {
-    width: 20px;
-    height: 20px;
-    border: 2px solid var(--border);
-    border-radius: 6px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: #5e605b;
     cursor: pointer;
-    transition: all 0.2s;
-    background: white;
-    appearance: none;
-    -webkit-appearance: none;
-    position: relative;
-  }
+    transition: background-color 0.2s;
+}
 
-  .plan-checkbox:hover {
-    border-color: var(--primary);
-  }
+.icon-button:hover {
+    background-color: #f0f5f2;
+}
 
-  .plan-checkbox:checked {
-    border-color: var(--primary);
-    background: var(--primary);
-    color: white;
-  }
+.icon-button:active {
+    transform: scale(0.95);
+}
 
-  .plan-checkbox:checked::after {
-    content: '✓';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 14px;
-    font-weight: bold;
-    color: white;
-    font-family: 'Font Awesome 5 Free';
-    font-weight: 900;
-  }
+.material-symbols-outlined {
+    font-size: 24px;
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
 
-  .plan-number {
-    width: 20px;
-    height: 20px;
-    border-radius: 4px;
-    background: var(--primary);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: bold;
-    flex-shrink: 0;
-    box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.1);
-  }
+.material-symbols-outlined.filled {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
 
-  .plan-content {
-    flex: 1;
-    font-size: 16px;
-    color: var(--text-primary);
-    transition: all 0.2s;
+.main-content {
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-bottom: 128px;
+    max-width: 448px;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-  }
+    gap: 24px;
+}
 
-  .plan-text {
-    font-size: 16px;
-  }
+.overview-card {
+    background-color: #f0f5f2;
+    border-radius: 24px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    box-shadow: 0px 8px 24px rgba(42, 52, 50, 0.06);
+    border: 1px solid rgba(114, 125, 122, 0.1);
+}
 
-  .plan-date-badge {
-    font-size: 12px;
-    color: var(--error);
-    font-weight: 500;
-  }
+.segmented-toggle {
+    display: flex;
+    padding: 4px;
+    background-color: rgba(218, 229, 225, 0.5);
+    border-radius: 16px;
+}
 
-  .plan-item.completed .plan-content {
-    color: var(--text-secondary);
-    font-style: italic;
-  }
-
-  .edit-form {
+.toggle-btn {
     flex: 1;
-  }
+    padding: 8px 0;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    background-color: #ffffff;
+    color: #2D5A27;
+    cursor: pointer;
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+}
 
-  .edit-input {
+.toggle-btn:not(.active) {
+    background: transparent;
+    color: #57615f;
+    font-weight: 500;
+    box-shadow: none;
+}
+
+.toggle-btn:not(.active):hover {
+    color: #2D5A27;
+}
+
+.date-navigation {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nav-button {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #2D5A27;
+    font-size: 14px;
+    font-weight: 700;
     padding: 8px 12px;
-  }
+    min-height: 48px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
 
-  .action-btn {
+.nav-button:hover {
+    background-color: rgba(45, 90, 39, 0.05);
+}
+
+.nav-button:active {
+    transform: scale(0.95);
+}
+
+.nav-button .material-symbols-outlined {
+    font-size: 14px;
+}
+
+.current-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.today-label {
+    font-size: 10px;
+    color: #57615f;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.date-value {
+    font-size: 16px;
+    font-weight: 800;
+    color: #2a3432;
+}
+
+.week-number {
+    font-size: 18px;
+    font-weight: 800;
+    color: #2a3432;
+}
+
+.week-range {
+    font-size: 12px;
+    font-weight: 700;
+    color: #57615f;
+}
+
+.progress-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.progress-label {
+    font-size: 14px;
+    font-weight: 800;
+    color: #2a3432;
+}
+
+.progress-percentage {
+    font-size: 12px;
+    font-weight: 900;
+    color: #2D5A27;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background-color: #e1eae7;
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background-color: #2D5A27;
+    border-radius: 9999px;
+    transition: width 0.7s ease;
+}
+
+.progress-hint {
+    font-size: 11px;
+    color: #57615f;
+    font-weight: 500;
+    line-height: 1.6;
+}
+
+.task-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.week-task-section {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+}
+
+.section-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #57615f;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.indicator {
+    width: 4px;
+    height: 16px;
+    border-radius: 9999px;
+}
+
+.indicator.error {
+    background-color: #9e422c;
+}
+
+.indicator.primary {
+    background-color: #bcf0ae;
+}
+
+.badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.error-badge {
+    background-color: #fe8b70;
+    color: #742410;
+}
+
+.secondary-badge {
+    background-color: #e2e3dd;
+    color: #50524e;
+}
+
+.task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.task-card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 72px;
+    box-shadow: 0px 4px 12px rgba(42, 52, 50, 0.04);
+    border: 1px solid rgba(114, 125, 122, 0.1);
+}
+
+.task-card.completed {
+    background-color: #d6f3d7;
+    border: 1px solid rgba(45, 90, 39, 0.1);
+}
+
+.task-number {
     width: 36px;
     height: 36px;
-    border: none;
     border-radius: 8px;
-    background: transparent;
-    cursor: pointer;
-    font-size: 18px;
+    background-color: #e1eae7;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 12px;
+    font-weight: 900;
+    color: #57615f;
+    flex-shrink: 0;
+}
+
+.task-number.completed-num {
+    background-color: rgba(68, 93, 71, 0.1);
+    color: #445d47;
+}
+
+.checkbox-button {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: #727d7a;
+    cursor: pointer;
     transition: all 0.2s;
-  }
+    flex-shrink: 0;
+}
 
-  .action-btn :deep(.iconify) {
+.checkbox-button:active {
+    transform: scale(0.9);
+}
+
+.checkbox-button.checked {
+    color: #2D5A27;
+}
+
+.checkbox-button .material-symbols-outlined {
+    font-size: 28px;
+}
+
+.checkbox-button .unchecked {
+    font-variation-settings: 'FILL' 0;
+}
+
+.task-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.task-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #2a3432;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.task-title.completed-text {
+    color: #445d47;
+}
+
+.task-date {
+    font-size: 10px;
+    color: #57615f;
+    font-weight: 600;
+}
+
+.task-date.error {
+    color: #9e422c;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 9px;
+}
+
+.task-date.completed-date {
+    color: #2D5A27;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 9px;
+}
+
+.task-actions {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.action-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: #57615f;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+    background-color: #f0f5f2;
+}
+
+.action-btn .material-symbols-outlined {
+    font-size: 20px;
+}
+
+.completed-badge {
+    display: flex;
+    align-items: center;
+    padding-right: 8px;
+}
+
+.completed-badge span {
+    background-color: #2D5A27;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Week View Styles */
+.week-day-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.week-day-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px;
+}
+
+.day-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #a9b4b1;
+}
+
+.day-dot.primary {
+    background-color: #2D5A27;
+}
+
+.week-day-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #57615f;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.week-task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.week-task-card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0px 4px 12px rgba(42, 52, 50, 0.04);
+    border: 1px solid rgba(114, 125, 122, 0.1);
+}
+
+.week-task-card.completed {
+    background-color: #d6f3d7;
+    border: 1px solid rgba(45, 90, 39, 0.1);
+}
+
+.week-task-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background-color: #e1eae7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 900;
+    color: #57615f;
+    flex-shrink: 0;
+}
+
+.week-task-card.completed .week-task-number {
+    background-color: rgba(68, 93, 71, 0.1);
+    color: #445d47;
+}
+
+.week-task-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.week-task-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #2a3432;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.week-task-card.completed .week-task-title {
+    color: #445d47;
+}
+
+.week-task-badge {
+    background-color: #2D5A27;
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+.week-empty-card {
+    border: 2px dashed rgba(114, 125, 122, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: rgba(240, 245, 242, 0.3);
+}
+
+.week-empty-card .material-symbols-outlined {
+    font-size: 24px;
+    color: #727d7a;
+}
+
+.week-empty-card p {
+    font-size: 12px;
+    font-weight: 700;
+    color: #57615f;
+}
+
+.fab-button {
+    position: fixed;
+    bottom: 112px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    background-color: #2D5A27;
+    color: #e6ffdb;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(42, 52, 50, 0.2);
+    border: none;
+    cursor: pointer;
+    z-index: 55;
     transition: all 0.2s;
-    color: var(--text-secondary);
+}
+
+.fab-button:active {
+    transform: scale(0.9);
+}
+
+.fab-button .material-symbols-outlined {
+    font-size: 30px;
+    font-weight: 700;
+}
+
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 50;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: rgba(248, 250, 248, 0.7);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid #e9efed;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    box-shadow: 0 -8px 24px rgba(42, 52, 50, 0.06);
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 20px;
+    border-radius: 16px;
+    text-decoration: none;
+    color: #78716c;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    flex: 1;
+    max-width: 128px;
+}
+
+.nav-item.active {
+    background-color: #dae5e1;
+    color: #2D5A27;
+}
+
+.nav-item:not(.active):hover {
+    color: #2D5A27;
+}
+
+.nav-item:active {
+    transform: scale(0.9);
+}
+
+.nav-item .material-symbols-outlined {
     font-size: 20px;
-    width: 20px;
-    height: 20px;
-  }
+    margin-bottom: 2px;
+}
 
-  .action-btn:hover :deep(.iconify) {
-    color: var(--primary);
-  }
+.nav-label {
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-align: center;
+    margin-top: 0;
+}
 
-  .save-btn :deep(.iconify) {
-    color: var(--primary);
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
-  }
-
-  .edit-btn :deep(.iconify) {
-    color: var(--primary);
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
-  }
-
-  .cancel-btn :deep(.iconify) {
-    color: var(--text-secondary);
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
-  }
-
-  .delete-btn :deep(.iconify) {
-    color: var(--text-secondary);
-    font-size: 20px;
-    width: 20px;
-    height: 20px;
-  }
-
-  .save-btn:hover :deep(.iconify) {
-    color: var(--primary);
-  }
-
-  .edit-btn:hover :deep(.iconify) {
-    color: var(--primary);
-  }
-
-  .cancel-btn:hover :deep(.iconify) {
-    color: var(--primary);
-  }
-
-  .delete-btn:hover :deep(.iconify) {
-    color: var(--error);
-  }
-
-  .action-btn:hover {
-    background: var(--bg-secondary);
-    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
-  }
-
-  .save-btn:hover {
-    background: var(--primary-light);
-    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
-  }
-
-  .edit-btn:hover {
-    background: var(--primary-light);
-    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
-  }
-
-  .delete-btn:hover {
-    background: var(--error-light);
-    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
-  }
-
-  .modal-overlay {
+.modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -926,230 +1330,110 @@
     justify-content: center;
     z-index: 150;
     padding: 20px;
-  }
+}
 
-  .modal-content {
+.modal-content {
     background: white;
-    padding: 40px;
-    border-radius: 12px;
-    border: 3px solid var(--border);
-    width: 100%;
-    max-width: 500px;
-  }
-
-  .add-plan-textarea {
-    font-size: 18px;
-    padding: 16px 20px;
-    min-height: 80px;
-    width: 100%;
-    box-sizing: border-box;
-    resize: vertical;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    font-family: inherit;
-  }
-
-  .edit-textarea {
-    font-size: 18px;
-    padding: 16px 20px;
-    min-height: 80px;
-    width: 100%;
-    box-sizing: border-box;
-    resize: vertical;
-    border: 2px solid var(--border);
-    border-radius: 8px;
-    font-family: inherit;
-  }
-
-  .delete-message {
-    text-align: center;
-    color: var(--text-primary);
-    font-size: 16px;
-    margin: 0;
-    padding: 20px 0;
-    font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
-  }
-
-  .week-view {
-    margin-top: 16px;
-  }
-
-  .week-days-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .week-column {
-    background: white;
-    border-radius: 12px;
-    border: 2px solid var(--border);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 12px;
-  }
-
-  .week-header {
-    padding: 8px 12px;
-    text-align: right;
-    background: var(--bg-secondary);
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 6px;
-  }
-
-  .week-header.today {
-    background: var(--primary);
-  }
-
-  .week-header.today .day-name,
-  .week-header.today {
-    color: white;
-  }
-
-  .day-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text-secondary);
-  }
-
-
-  .day-plans {
-    padding: 12px;
-    min-height: 60px;
-  }
-
-  .no-plans {
-    text-align: left;
-    padding: 10px 0;
-    color: var(--text-secondary);
-    font-size: 14px;
-    width: 100%;
-  }
-
-  .week-plan-list {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 10px;
-    width: 100%;
-  }
-
-  .week-plan-item {
-    padding: 8px 12px;
-    border-radius: 6px;
-    background: var(--bg-secondary);
-    border: 2px solid var(--border);
-    font-size: 14px;
-    line-height: 1.4;
-    flex: 0 0 auto;
-    max-width: 220px;
-    transition: all 0.2s;
-    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
-    font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
-  }
-
-  .week-plan-item.completed {
-    opacity: 0.6;
-    background: #E8F5E9;
-    border-color: #A5D6A7;
-  }
-
-  .week-plan-content {
-    color: var(--text-primary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
-
-  .header {
-    padding: 16px 20px;
-  }
-
-  .upload-card {
     padding: 24px;
-  }
+    border-radius: 16px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 8px 24px rgba(42, 52, 50, 0.2);
+}
 
-  .modal-content.large {
-    padding: 32px;
-  }
-
-  .modal-actions {
-    margin-top: 24px;
-    gap: 16px;
-  }
-
-  .modal-content h3 {
-    margin: 0 0 20px;
+.modal-content h3 {
+    margin: 0 0 16px;
     text-align: center;
-    color: var(--text-primary);
-  }
+    color: #2a3432;
+    font-size: 18px;
+    font-weight: 700;
+}
 
-  .modal-actions {
+.add-plan-textarea {
+    font-size: 16px;
+    padding: 12px 16px;
+    min-height: 80px;
+    width: 100%;
+    box-sizing: border-box;
+    resize: vertical;
+    border: 2px solid #e1eae7;
+    border-radius: 12px;
+    font-family: 'Manrope', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.add-plan-textarea:focus {
+    border-color: #2D5A27;
+}
+
+.edit-textarea {
+    font-size: 16px;
+    padding: 12px 16px;
+    min-height: 80px;
+    width: 100%;
+    box-sizing: border-box;
+    resize: vertical;
+    border: 2px solid #e1eae7;
+    border-radius: 12px;
+    font-family: 'Manrope', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.edit-textarea:focus {
+    border-color: #2D5A27;
+}
+
+.delete-message {
+    text-align: center;
+    color: #57615f;
+    font-size: 14px;
+    margin: 0;
+    padding: 16px 0;
+}
+
+.modal-actions {
     display: flex;
     gap: 12px;
     justify-content: flex-end;
     margin-top: 20px;
-  }
+}
 
-  .fab-button {
-    position: fixed;
-    bottom: 80px;
-    right: 20px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: var(--primary);
-    color: white;
-    border: none;
-    font-size: 24px;
+.modal-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-  }
+    transition: all 0.2s;
+    border: none;
+}
 
-  .fab-button:hover {
-    background: var(--primary-dark);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-  }
+.cancel-btn {
+    background: #e2e3dd;
+    color: #50524e;
+}
 
-  @media (max-width: 768px) {
-    .progress-nav-container {
-      flex-direction: column;
-      height: auto;
-    }
+.cancel-btn:hover {
+    background: #d1d3d0;
+}
 
-    .view-toggle-container {
-      flex-direction: column;
-      width: 100%;
-      min-width: auto;
-    }
+.confirm-btn {
+    background: #2D5A27;
+    color: white;
+}
 
-    .view-toggle {
-      flex: 1;
-    }
+.confirm-btn:hover {
+    background: #234a1f;
+}
 
-    .nav-buttons {
-      flex-direction: row;
-      width: 100%;
-    }
+.delete-confirm {
+    background: #9e422c;
+    color: white;
+}
 
-    .nav-btn {
-      flex: 1;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .user-info {
-      max-width: 100%;
-    }
-  }
+.delete-confirm:hover {
+    background: #7d3524;
+}
 </style>

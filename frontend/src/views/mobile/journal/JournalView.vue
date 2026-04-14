@@ -1,83 +1,78 @@
 <template>
   <div class="journal-page">
     <!-- Header -->
-    <header class="header sticky" @click="handleHeaderClick">
-      <div class="header-top">
-        <button class="back-btn" @click="goHome">
-          <Icon icon="mdi:home" />
-        </button>
-        <h1 class="title">暗语随笔</h1>
-        <div class="header-actions">
-          <div class="profile-avatar">
-            <img alt="User profile" :src="userStore.user?.avatar || defaultAvatar"/>
+    <PageHeader title="暗语随笔" :sticky="true" @back="goHome">
+      <template #actions>
+        <div class="profile-avatar">
+          <img alt="User profile" :src="userStore.user?.avatar || defaultAvatar"/>
+        </div>
+      </template>
+      <template #subheader>
+        <div class="search-section">
+          <div class="search-input-wrapper">
+            <Icon icon="mdi:search" class="search-input-icon" />
+            <input 
+              type="text" 
+              class="search-input" 
+              placeholder="搜索你的思绪..." 
+              v-model="searchQuery"
+            />
           </div>
         </div>
-      </div>
-      
-      <div class="search-section">
-        <div class="search-input-wrapper">
-          <Icon icon="mdi:search" class="search-input-icon" />
-          <input 
-            type="text" 
-            class="search-input" 
-            placeholder="搜索你的思绪..." 
-            v-model="searchQuery"
-          />
+        
+        <div class="categories-section">
+          <div class="categories-container">
+            <button 
+              class="category-btn" 
+              :class="{ active: selectedCategory === 'all' }"
+              @click="selectedCategory = 'all'"
+            >
+              全部
+            </button>
+            <button 
+              v-for="category in categories" 
+              :key="category.id"
+              class="category-btn"
+              :class="{ active: selectedCategory === category.id }"
+              @click="selectedCategory = category.id"
+            >
+              {{ category.name }}
+            </button>
+          </div>
+          <div class="sticky-right">
+            <button class="more-btn" @click="toggleCategoryDropdown">
+              <Icon icon="mdi:chevron-down" class="dropdown-arrow" :class="{ rotated: showCategoryDropdown }" />
+            </button>
+          </div>
         </div>
-      </div>
-      
-      <div class="categories-section">
-        <div class="categories-container">
-          <button 
-            class="category-btn" 
+        
+        <!-- Categories Dropdown -->
+        <div v-if="showCategoryDropdown" class="categories-dropdown-menu">
+          <div 
+            class="dropdown-item" 
             :class="{ active: selectedCategory === 'all' }"
-            @click="selectedCategory = 'all'"
+            @click="selectedCategory = 'all'; showCategoryDropdown = false"
           >
             全部
-          </button>
-          <button 
+          </div>
+          <div 
             v-for="category in categories" 
             :key="category.id"
-            class="category-btn"
+            class="dropdown-item"
             :class="{ active: selectedCategory === category.id }"
-            @click="selectedCategory = category.id"
+            @click="selectedCategory = category.id; showCategoryDropdown = false"
           >
             {{ category.name }}
-          </button>
+          </div>
+          <div class="dropdown-item manage-category" @click="openManageCategoryModal(); showCategoryDropdown = false">
+            <Icon icon="mdi:cog" /> 管理分类
+          </div>
+          <div class="dropdown-item add-category" @click="openAddCategoryModal(); showCategoryDropdown = false">
+            <Icon icon="mdi:plus" /> 新建分类
+          </div>
         </div>
-        <div class="sticky-right">
-          <button class="more-btn" @click="toggleCategoryDropdown">
-            <Icon icon="mdi:chevron-down" class="dropdown-arrow" :class="{ rotated: showCategoryDropdown }" />
-          </button>
-        </div>
-      </div>
-      
-      <!-- Categories Dropdown - Moved outside categories-section for proper positioning -->
-      <div v-if="showCategoryDropdown" class="categories-dropdown-menu">
-        <div 
-          class="dropdown-item" 
-          :class="{ active: selectedCategory === 'all' }"
-          @click="selectedCategory = 'all'; showCategoryDropdown = false"
-        >
-          全部
-        </div>
-        <div 
-          v-for="category in categories" 
-          :key="category.id"
-          class="dropdown-item"
-          :class="{ active: selectedCategory === category.id }"
-          @click="selectedCategory = category.id; showCategoryDropdown = false"
-        >
-          {{ category.name }}
-        </div>
-        <div class="dropdown-item manage-category" @click="openManageCategoryModal(); showCategoryDropdown = false">
-          <Icon icon="mdi:cog" /> 管理分类
-        </div>
-        <div class="dropdown-item add-category" @click="openAddCategoryModal(); showCategoryDropdown = false">
-          <Icon icon="mdi:plus" /> 新建分类
-        </div>
-      </div>
-    </header>
+      </template>
+    </PageHeader>
     
     <!-- Main Content -->
     <main class="main-content">
@@ -348,6 +343,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../../../stores/user'
 import CustomSelect from '../../../components/CustomSelect.vue'
+import PageHeader from '../../../components/PageHeader.vue'
 import { categoryApi, noteApi } from '../../../api/journal'
 import { Icon } from '@iconify/vue'
 
@@ -529,7 +525,7 @@ function openEditNoteModal(note) {
   formData.value = {
     title: note.title || '',
     content: note.content || '',
-    category: note.category || '',
+    category: note.category_id || '',
     useTitle: !!note.title
   }
   editingJournal.value = note
@@ -624,6 +620,11 @@ async function renameCategory() {
     
     await categoryApi.updateCategory(categoryToRename.value.id, renameCategoryName.value.trim())
     await loadFromApi()
+    
+    // 更新管理分类弹窗中的分类名称
+    if (showManageCategoryModal.value) {
+      managedCategories.value = [...categories.value]
+    }
     
     showRenameCategoryModal.value = false
     categoryToRename.value = null
