@@ -127,24 +127,7 @@
     </button>
     
     <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-      <a class="nav-item active" href="#">
-        <Icon icon="mdi:note-edit" />
-        <span class="nav-label">随笔</span>
-      </a>
-      <a class="nav-item" href="#">
-        <Icon icon="mdi:search" />
-        <span class="nav-label">搜索</span>
-      </a>
-      <a class="nav-item" href="#">
-        <Icon icon="mdi:chart-bar" />
-        <span class="nav-label">统计</span>
-      </a>
-      <a class="nav-item" href="#">
-        <Icon icon="mdi:cog" />
-        <span class="nav-label">设置</span>
-      </a>
-    </nav>
+    <BottomNav :items="navItems" />
 
     <!-- Modal Overlay (Edit/Create View) -->
     <div v-if="showAddModal" class="modal-overlay" @click.self="closeModal">
@@ -344,6 +327,7 @@ import { useRouter } from 'vue-router'
 import { useUserStore } from '../../../stores/user'
 import CustomSelect from '../../../components/CustomSelect.vue'
 import PageHeader from '../../../components/PageHeader.vue'
+import BottomNav from '../../../components/BottomNav.vue'
 import { categoryApi, noteApi } from '../../../api/journal'
 import { Icon } from '@iconify/vue'
 
@@ -351,7 +335,13 @@ const router = useRouter()
 const userStore = useUserStore()
 
 // 默认头像
-const defaultAvatar = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDSGN0Cm9Bxf1dh4sgXge21tfxPoA1zS4UJrOAZ0NdLM2CFGR4FElhuCJkTwiCmu_NAvIxXk7cj09ebPXoKJnPIlha0R4tpO0ewejnJRFLe4KDx7w1zv5XrXW8dOQCRrXAJgf5IBTrt7fGb4BcFrjcn5AmGPk1cHLgou6ONPBrDeNkZNXQlnyDab2SGV5lO2kRKqhkkqJGkOEyTxXodNJKfzzfQan-gGiSo_uyoDZJXIm5qFJOCet_YntMz6OgVwDWR4obhSWOk_Eo'
+const defaultAvatar = '/logo.png'
+
+const navItems = [
+  { icon: 'mdi:checkbox-marked-circle-outline', label: '执策', path: '/mobile/plan', active: false },
+  { icon: 'mdi:note-edit', label: '随笔', path: '/mobile/journal', active: true },
+  { icon: 'mdi:account', label: '我的', path: '/mobile/profile', active: false }
+]
 
 // 响应式数据
 const showAddModal = ref(false)
@@ -1337,8 +1327,8 @@ function handleDocumentClick(event) {
   width: 56px;
   height: 56px;
   border-radius: 12px;
-  background-color: var(--primary);
-  color: var(--on-primary);
+  background-color: #2D5A27;
+  color: white;
   box-shadow: 0 4px 12px rgba(42, 52, 50, 0.2);
   display: flex;
   align-items: center;
@@ -1346,12 +1336,13 @@ function handleDocumentClick(event) {
   z-index: 50;
   border: none;
   cursor: pointer;
-  flex: none;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
 }
 
-.fab-button .material-symbols-outlined {
-  font-size: 24px;
-  font-weight: bold;
+.fab-button .iconify {
+  font-size: 30px;
+  font-weight: 700;
 }
 
 /* 底部导航 */

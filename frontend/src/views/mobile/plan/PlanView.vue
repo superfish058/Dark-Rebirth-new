@@ -207,23 +207,10 @@
         </main>
 
         <button v-if="viewMode === 'day'" class="fab-button" @click="showAddModal = true">
-            <span class="material-symbols-outlined">add</span>
+            <Icon icon="mdi:plus" />
         </button>
 
-        <nav class="bottom-nav">
-            <a class="nav-item active" href="#">
-                <span class="material-symbols-outlined filled">home</span>
-                <span class="nav-label">首页</span>
-            </a>
-            <a class="nav-item" href="#">
-                <span class="material-symbols-outlined">grid_view</span>
-                <span class="nav-label">应用</span>
-            </a>
-            <a class="nav-item" href="#">
-                <span class="material-symbols-outlined">person</span>
-                <span class="nav-label">我的</span>
-            </a>
-        </nav>
+        <BottomNav :items="navItems" />
 
         <div v-if="showAddModal" class="modal-overlay" @click.self="closeModal">
             <div class="modal-content">
@@ -267,6 +254,8 @@ import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../../../stores/user'
 import PageHeader from '../../../components/PageHeader.vue'
+import BottomNav from '../../../components/BottomNav.vue'
+import { Icon } from '@iconify/vue'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -275,7 +264,13 @@ function goHome() {
     router.push('/')
 }
 
-const defaultAvatar = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDSGN0Cm9Bxf1dh4sgXge21tfxPoA1zS4UJrOAZ0NdLM2CFGR4FElhuCJkTwiCmu_NAvIxXk7cj09ebPXoKJnPIlha0R4tpO0ewejnJRFLe4KDx7w1zv5XrXW8dOQCRrXAJgf5IBTrt7fGb4BcFrjcn5AmGPk1cHLgou6ONPBrDeNkZNXQlnyDab2SGV5lO2kRKqhkkqJGkOEyTxXodNJKfzzfQan-gGiSo_uyoDZJXIm5qFJOCet_YntMz6OgVwDWR4obhSWOk_Eo'
+const defaultAvatar = '/logo.png'
+
+const navItems = [
+  { icon: 'mdi:checkbox-marked-circle-outline', label: '执策', path: '/mobile/plan', active: true },
+  { icon: 'mdi:note-edit', label: '随笔', path: '/mobile/journal', active: false },
+  { icon: 'mdi:account', label: '我的', path: '/mobile/profile', active: false }
+]
 
 const viewMode = ref('day')
 const currentDate = ref(getBeijingTime(new Date()))
@@ -1230,28 +1225,29 @@ watch(showAddModal, (val) => {
 
 .fab-button {
     position: fixed;
-    bottom: 112px;
+    bottom: 105px;
     right: 24px;
     width: 56px;
     height: 56px;
+    border-radius: 12px;
     background-color: #2D5A27;
-    color: #e6ffdb;
-    border-radius: 16px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(42, 52, 50, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 24px rgba(42, 52, 50, 0.2);
+    box-sizing: border-box;
+    z-index: 50;
     border: none;
     cursor: pointer;
-    z-index: 55;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
 
 .fab-button:active {
     transform: scale(0.9);
 }
 
-.fab-button .material-symbols-outlined {
+.fab-button .iconify {
     font-size: 30px;
     font-weight: 700;
 }
