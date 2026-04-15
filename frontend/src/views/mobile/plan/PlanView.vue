@@ -272,7 +272,7 @@ const router = useRouter()
 const userStore = useUserStore()
 
 function goHome() {
-    router.push('/mobile')
+    router.push('/')
 }
 
 const defaultAvatar = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDSGN0Cm9Bxf1dh4sgXge21tfxPoA1zS4UJrOAZ0NdLM2CFGR4FElhuCJkTwiCmu_NAvIxXk7cj09ebPXoKJnPIlha0R4tpO0ewejnJRFLe4KDx7w1zv5XrXW8dOQCRrXAJgf5IBTrt7fGb4BcFrjcn5AmGPk1cHLgou6ONPBrDeNkZNXQlnyDab2SGV5lO2kRKqhkkqJGkOEyTxXodNJKfzzfQan-gGiSo_uyoDZJXIm5qFJOCet_YntMz6OgVwDWR4obhSWOk_Eo'
@@ -723,7 +723,6 @@ watch(showAddModal, (val) => {
     padding-left: 16px;
     padding-right: 16px;
     padding-bottom: 128px;
-    max-width: 448px;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
