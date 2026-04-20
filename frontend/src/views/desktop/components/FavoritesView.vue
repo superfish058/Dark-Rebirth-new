@@ -18,16 +18,31 @@
     <template v-else>
       <!-- 页面头部 -->
       <div class="favorites-header">
-        <button class="add-btn" @click="resetForm(); showAddDialog = true">
-          <span class="add-icon">+</span>
-          添加网站
-        </button>
-        <div class="edit-toggle">
-          <span class="edit-toggle-label">编辑</span>
-          <label class="switch">
-            <input type="checkbox" v-model="isEditMode" @change="toggleEditMode">
-            <span class="slider"></span>
-          </label>
+        <div class="search-container">
+          <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input 
+            v-model="searchQuery" 
+            type="text" 
+            class="search-input" 
+            placeholder="搜索书签..."
+            @input="handleSearch"
+          />
+        </div>
+        <div class="header-actions">
+          <button class="add-btn" @click="resetForm(); showAddDialog = true">
+            <span class="add-icon">+</span>
+            添加网站
+          </button>
+          <div class="edit-toggle">
+            <span class="edit-toggle-label">编辑</span>
+            <label class="switch">
+              <input type="checkbox" v-model="isEditMode" @change="toggleEditMode">
+              <span class="slider"></span>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -43,20 +58,24 @@
 
       <!-- 分类展示 -->
       <div v-else class="categories-container" :class="{ 'edit-mode': isEditMode }">
-        <div v-for="category in categories" :key="category.id" class="category" v-show="category.id !== '999' || (category.websites && category.websites.length > 0)">
+        <div v-for="category in filteredCategories" :key="category.id" class="category" v-show="category.id !== '999' || (category.websites && category.websites.length > 0)">
           <div class="category-header">
-            <div class="category-title-container">
-              <h3 class="category-title" v-if="!editingCategory || editingCategory.id !== category.id">{{ category.name }}</h3>
-              <div v-else class="category-edit">
-                <input 
-                  ref="categoryInput"
-                  v-model="editingCategory.name" 
-                  type="text" 
-                  class="category-edit-input" 
-                  @keyup.esc="cancelCategoryEdit"
-                  @input="validateCategoryName"
-                />
-                <div v-if="categoryNameError" class="category-error">{{ categoryNameError }}</div>
+            <div class="category-title-row">
+              <div class="category-title-container">
+                <div class="category-indicator"></div>
+                <h3 class="category-title" v-if="!editingCategory || editingCategory.id !== category.id">{{ category.name }}</h3>
+                <div v-if="!editingCategory || editingCategory.id !== category.id" class="category-count-badge">{{ category.websites?.length || 0 }}</div>
+                <div v-else class="category-edit">
+                  <input 
+                    ref="categoryInput"
+                    v-model="editingCategory.name" 
+                    type="text" 
+                    class="category-edit-input" 
+                    @keyup.esc="cancelCategoryEdit"
+                    @input="validateCategoryName"
+                  />
+                  <div v-if="categoryNameError" class="category-error">{{ categoryNameError }}</div>
+                </div>
               </div>
               <div v-if="isEditMode && (!editingCategory || editingCategory.id !== category.id) && category.id !== '999'" class="category-actions">
                 <button class="category-edit-btn" @click.stop="editCategory(category)">
@@ -95,6 +114,7 @@
               </div>
               <div class="website-info">
                 <h4 class="website-name">{{ website.name }}</h4>
+                <p v-if="website.description" class="website-desc">{{ website.description }}</p>
               </div>
               <div v-if="isEditMode" class="website-actions">
                 <button class="action-btn edit-btn" @click.stop="editWebsite(website)">
@@ -273,7 +293,7 @@
               <button type="button" class="cancel-btn" @click="showAddCategory = false">
                 取消
               </button>
-              <button type="submit" class="save-btn">添加</button>
+              <button type="button" class="save-btn" @click="addCategory">添加</button>
             </div>
           </form>
         </div>
@@ -332,6 +352,8 @@ const isEditMode = ref(false)
 const loading = ref(false)
 const showDeleteCategoryModal = ref(false)
 const categoryToDelete = ref(null)
+const searchQuery = ref('')
+const filteredCategories = ref([])
 
 // 计算属性：是否登录
 const isLoggedIn = computed(() => userStore.isLoggedIn)
@@ -406,12 +428,44 @@ const totalWebsites = computed(() => {
   return categories.value.reduce((total, category) => total + category.websites.length, 0)
 })
 
+// 获取分类颜色
+function getCategoryColor(categoryId) {
+  const colors = ['primary', 'secondary', 'tertiary', 'quaternary']
+  const index = categories.value.findIndex(cat => cat.id === categoryId)
+  return colors[index % colors.length]
+}
+
 // 计算属性：分类选项（直接使用后端返回的分类）
 const categoryOptions = computed(() => {
   return categories.value
     .filter(cat => cat.id !== '999')
     .map(cat => ({ label: cat.name, value: cat.id }))
 })
+
+// 处理搜索
+function handleSearch() {
+  const query = searchQuery.value.trim().toLowerCase()
+  if (!query) {
+    filteredCategories.value = categories.value
+    return
+  }
+  
+  filteredCategories.value = categories.value
+    .map(category => ({
+      ...category,
+      websites: category.websites.filter(website => 
+        website.name.toLowerCase().includes(query) || 
+        (website.description && website.description.toLowerCase().includes(query)) ||
+        website.url.toLowerCase().includes(query)
+      )
+    }))
+    .filter(category => category.websites.length > 0)
+}
+
+// 监听 categories 变化，更新 filteredCategories
+watch(categories, (newCategories) => {
+  filteredCategories.value = newCategories
+}, { immediate: true })
 
 // 处理分类选择变化
 function handleCategoryChange(option) {
@@ -754,12 +808,53 @@ async function saveCategoryEdit() {
 /* 页面头部 */
 .favorites-header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
+  gap: 16px;
+  margin-bottom: 24px;
   padding: 0;
   border-bottom: none;
+  flex-wrap: wrap;
+}
+
+.search-container {
+  position: relative;
+  width: 220px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 14px 10px 34px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #f1f5f9;
+  font-size: 14px;
+  color: #334155;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #0042a6;
+}
+
+.search-input::placeholder {
+  color: #94a3b8;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .add-btn {
@@ -872,7 +967,14 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.category-title-row {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 8px;
 }
 
 .category-title-container {
@@ -881,17 +983,35 @@ input:checked + .slider:before {
   flex: 1;
   gap: 8px;
   min-height: 32px;
-  height: 32px;
   line-height: 32px;
 }
 
 .category-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #334155;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
   margin: 0;
   padding: 0;
   border-bottom: none;
+}
+
+.category-indicator {
+  width: 4px;
+  height: 24px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, #0042a6, #0066cc);
+}
+
+.category-count-badge {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: #e2e8f0;
+  margin-left: 8px;
+  line-height: 1.4;
 }
 
 .category-edit {
@@ -1020,14 +1140,14 @@ input:checked + .slider:before {
 .website-card {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
+  gap: 12px;
+  padding: 12px 14px;
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid #e2e8f0;
   cursor: pointer;
   width: 200px;
-  transition: transform 0.2s ease;
+  transition: all 0.2s ease;
   position: relative;
   z-index: 10;
 }
@@ -1035,7 +1155,9 @@ input:checked + .slider:before {
 .website-card:hover:not(.edit-mode) {
   transform: translateY(-2px);
   z-index: 100;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 66, 166, 0.2);
 }
 
 /* 编辑模式下的卡片样式 */
@@ -1051,25 +1173,30 @@ input:checked + .slider:before {
 .website-icon {
   width: 40px;
   height: 40px;
-  border-radius: 6px;
+  border-radius: 10px;
   overflow: hidden;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f1f5f9;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
+}
+
+.website-card:hover:not(.edit-mode) .website-icon {
+  transform: scale(1.05);
 }
 
 .website-icon img {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 2px;
+  padding: 5px;
 }
 
 .icon-placeholder {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 600;
   color: #0042a6;
   text-transform: uppercase;
@@ -1079,12 +1206,24 @@ input:checked + .slider:before {
 .website-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .website-name {
   font-size: 14px;
   font-weight: 500;
   color: #1e293b;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.website-desc {
+  font-size: 12px;
+  color: #64748b;
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -1382,7 +1521,7 @@ input:checked + .slider:before {
   padding: 0;
   width: 90%;
   max-width: 550px;
-  max-height: 85vh;
+  max-height: 90vh;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   border: 1px solid #e2e8f0;
   animation: dialogSlideIn 0.3s ease;
@@ -1450,7 +1589,7 @@ input:checked + .slider:before {
   padding: 24px;
   overflow-y: auto;
   flex: 1;
-  max-height: calc(85vh - 120px);
+  max-height: calc(90vh - 120px);
 }
 
 /* 表单样式 */

@@ -13,9 +13,9 @@
             <section v-if="viewMode === 'day'" class="overview-card">
                 <div class="segmented-toggle">
                     <button class="toggle-btn" :class="{ active: viewMode === 'day' }"
-                        @click="viewMode = 'day'">Daily</button>
+                        @click="viewMode = 'day'">每日</button>
                     <button class="toggle-btn" :class="{ active: viewMode === 'week' }"
-                        @click="viewMode = 'week'">Weekly</button>
+                        @click="viewMode = 'week'">每周</button>
                 </div>
 
                 <div class="date-navigation">
@@ -51,9 +51,9 @@
             <section v-else class="overview-card">
                 <div class="segmented-toggle">
                     <button class="toggle-btn" :class="{ active: viewMode === 'day' }"
-                        @click="viewMode = 'day'">Daily</button>
+                        @click="viewMode = 'day'">每日</button>
                     <button class="toggle-btn" :class="{ active: viewMode === 'week' }"
-                        @click="viewMode = 'week'">Weekly</button>
+                        @click="viewMode = 'week'">每周</button>
                 </div>
 
                 <div class="date-navigation">
@@ -739,7 +739,7 @@ watch(showAddModal, (val) => {
     display: flex;
     padding: 4px;
     background-color: rgba(218, 229, 225, 0.5);
-    border-radius: 16px;
+    border-radius: 8px;
 }
 
 .toggle-btn {
@@ -748,7 +748,7 @@ watch(showAddModal, (val) => {
     font-size: 14px;
     font-weight: 700;
     border: none;
-    border-radius: 12px;
+    border-radius: 6px;
     background-color: #ffffff;
     color: #2D5A27;
     cursor: pointer;
