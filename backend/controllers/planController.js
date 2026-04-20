@@ -2,8 +2,9 @@ const db = require('../models/db');
 
 function getBeijingDateTime() {
   const now = new Date();
-  const beijingOffset = 8 * 60 * 60000;
-  return new Date(now.getTime() + beijingOffset).toISOString().replace('T', ' ').substring(0, 19);
+  const beijingOffset = 8 * 60 * 60 * 1000;
+  const localOffset = now.getTimezoneOffset() * 60 * 1000;
+  return new Date(now.getTime() + localOffset + beijingOffset).toISOString().replace('T', ' ').substring(0, 19);
 }
 
 // 获取今日计划

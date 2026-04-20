@@ -53,6 +53,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { Icon } from '@iconify/vue'
+import { getWeekStart, getWeekNumber } from '../utils/dateUtils'
 
 const props = defineProps({
   visible: {
@@ -73,20 +74,7 @@ const selectedYear = ref(props.modelValue ? props.modelValue.getFullYear() : new
 const selectedMonth = ref(props.modelValue ? props.modelValue.getMonth() : new Date().getMonth())
 const selectedWeekStart = ref(props.modelValue ? getWeekStart(props.modelValue) : getWeekStart(new Date()))
 
-function getWeekStart(date) {
-  const d = new Date(date)
-  const day = d.getDay()
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-  return new Date(d.setDate(diff))
-}
-
-function getWeekNumber(date) {
-  const firstDayOfYear = new Date(date.getFullYear(), 0, 1)
-  const pastDaysOfYear = (date - firstDayOfYear) / 86400000
-  return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7)
-}
-
-function formatDate(date) {
+function formatShortDate(date) {
   return `${date.getMonth() + 1}/${date.getDate()}`
 }
 
@@ -116,7 +104,7 @@ const weeksInMonth = computed(() => {
     // 只添加与当前月份有交集的周
     if (weekStart <= lastDayOfMonth && weekEnd >= firstDayOfMonth) {
       const weekNumber = getWeekNumber(weekStart)
-      const dateRange = `${formatDate(weekStart)} - ${formatDate(weekEnd)}`
+      const dateRange = `${formatShortDate(weekStart)} - ${formatShortDate(weekEnd)}`
       
       weeks.push({
         weekNumber,

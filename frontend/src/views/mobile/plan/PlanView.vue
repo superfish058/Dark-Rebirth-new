@@ -83,42 +83,8 @@
                 </div>
             </section>
 
-            <!-- Day View: History Incomplete -->
-            <section v-if="viewMode === 'day' && incompleteHistoryPlans.length > 0" class="task-section">
-                <div class="section-header">
-                    <h2 class="section-title">
-                        <span class="indicator error"></span>
-                        历史未完成计划
-                    </h2>
-                    <span class="badge error-badge">{{ incompleteHistoryPlans.length }} Pending</span>
-                </div>
-                <div class="task-list">
-                    <div v-for="(plan, index) in incompleteHistoryPlans" :key="'history-' + plan.id" class="task-card">
-                        <div class="task-number">{{ String(index + 1).padStart(2, '0') }}</div>
-                        <button class="checkbox-button" :class="{ checked: plan.completed }"
-                            @click="toggleComplete(plan)">
-                            <span class="material-symbols-outlined" :class="{ unchecked: !plan.completed }">{{
-                                plan.completed ?
-                                'check_box' : 'check_box_outline_blank' }}</span>
-                        </button>
-                        <div class="task-content">
-                            <p class="task-title">{{ plan.content }}</p>
-                            <span class="task-date error">{{ formatDateLabel(plan.date) }}</span>
-                        </div>
-                        <div class="task-actions">
-                            <button class="action-btn" @click="startEdit(plan)">
-                                <span class="material-symbols-outlined">edit_note</span>
-                            </button>
-                            <button class="action-btn" @click="deletePlan(plan)">
-                                <span class="material-symbols-outlined">delete_outline</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             <!-- Day View: Empty State -->
-            <section v-if="viewMode === 'day' && totalPlans === 0 && incompleteHistoryPlans.length === 0"
+            <section v-if="viewMode === 'day' && dayPlans.length === 0 && incompleteHistoryPlans.length === 0"
                 class="task-section">
                 <div class="section-header">
                     <h2 class="section-title">
@@ -142,8 +108,7 @@
                     <div v-for="(plan, index) in dayPlans" :key="plan.id" class="task-card"
                         :class="{ completed: plan.completed }">
                         <div class="task-number" :class="{ 'completed-num': plan.completed }">{{
-                            String(getHistoryCount() +
-                            index + 1).padStart(2, '0') }}</div>
+                            String(index + 1).padStart(2, '0') }}</div>
                         <button class="checkbox-button" :class="{ checked: plan.completed }"
                             @click="toggleComplete(plan)">
                             <span class="material-symbols-outlined" :class="{ unchecked: !plan.completed }">{{
@@ -160,6 +125,40 @@
                             <span>已完成</span>
                         </div>
                         <div v-else class="task-actions">
+                            <button class="action-btn" @click="startEdit(plan)">
+                                <span class="material-symbols-outlined">edit_note</span>
+                            </button>
+                            <button class="action-btn" @click="deletePlan(plan)">
+                                <span class="material-symbols-outlined">delete_outline</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Day View: History Incomplete -->
+            <section v-if="viewMode === 'day' && incompleteHistoryPlans.length > 0" class="task-section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <span class="indicator error"></span>
+                        历史未完成计划
+                    </h2>
+                    <span class="badge error-badge">{{ incompleteHistoryPlans.length }} Pending</span>
+                </div>
+                <div class="task-list">
+                    <div v-for="(plan, index) in incompleteHistoryPlans" :key="'history-' + plan.id" class="task-card">
+                        <div class="task-number">{{ String(dayPlans.length + index + 1).padStart(2, '0') }}</div>
+                        <button class="checkbox-button" :class="{ checked: plan.completed }"
+                            @click="toggleComplete(plan)">
+                            <span class="material-symbols-outlined" :class="{ unchecked: !plan.completed }">{{
+                                plan.completed ?
+                                'check_box' : 'check_box_outline_blank' }}</span>
+                        </button>
+                        <div class="task-content">
+                            <p class="task-title">{{ plan.content }}</p>
+                            <span class="task-date error">{{ formatDateLabel(plan.date) }}</span>
+                        </div>
+                        <div class="task-actions">
                             <button class="action-btn" @click="startEdit(plan)">
                                 <span class="material-symbols-outlined">edit_note</span>
                             </button>
@@ -256,6 +255,7 @@ import { useUserStore } from '../../../stores/user'
 import PageHeader from '../../../components/PageHeader.vue'
 import BottomNav from '../../../components/BottomNav.vue'
 import { Icon } from '@iconify/vue'
+import { toBeijingTime, formatDate, formatDateLabel, getWeekStart, isToday, formatWeekDay, getWeekNumber } from '../../../utils/dateUtils'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -273,7 +273,7 @@ const navItems = [
 ]
 
 const viewMode = ref('day')
-const currentDate = ref(getBeijingTime(new Date()))
+const currentDate = ref(toBeijingTime(new Date()))
 const dayPlans = ref([])
 const allPlans = ref([])
 const showAddModal = ref(false)
@@ -286,31 +286,10 @@ const showDeleteModal = ref(false)
 const showEditModal = ref(false)
 const currentPlan = ref(null)
 
-function getBeijingTime(date) {
-    const beijingOffset = 8 * 60 * 60 * 1000
-    const localOffset = date.getTimezoneOffset() * 60 * 1000
-    return new Date(date.getTime() + localOffset + beijingOffset)
-}
-
-function formatDate(date) {
-    const d = getBeijingTime(date)
-    const year = d.getFullYear()
-    const month = String(d.getMonth() + 1).padStart(2, '0')
-    const day = String(d.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-}
-
-function formatDateLabel(dateStr) {
-    if (!dateStr) return ''
-    const d = new Date(dateStr)
-    const options = { month: 'short', day: 'numeric' }
-    return d.toLocaleDateString('zh-CN', options)
-}
-
 const weekDays = computed(() => {
     const days = []
     const dayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-    const startOfWeek = getWeekStart(getBeijingTime(currentDate.value))
+    const startOfWeek = getWeekStart(toBeijingTime(currentDate.value))
 
     for (let i = 0; i < 7; i++) {
         const date = new Date(startOfWeek)
@@ -325,19 +304,6 @@ const weekDays = computed(() => {
     }
     return days
 })
-
-function getWeekStart(date) {
-    const d = getBeijingTime(date)
-    const day = d.getDay()
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-    return new Date(d.setDate(diff))
-}
-
-function isToday(date) {
-    const today = getBeijingTime(new Date())
-    const d = getBeijingTime(date)
-    return formatDate(today) === formatDate(d)
-}
 
 const completedCount = computed(() => {
     if (viewMode.value === 'day') {
@@ -373,7 +339,7 @@ const progressHint = computed(() => {
 })
 
 const incompleteHistoryPlans = computed(() => {
-    const currentDateStr = formatDate(getBeijingTime(currentDate.value))
+    const currentDateStr = formatDate(toBeijingTime(currentDate.value))
     return allPlans.value
         .filter(plan => {
             if (!plan.date) return false
@@ -383,34 +349,32 @@ const incompleteHistoryPlans = computed(() => {
 })
 
 const formattedDate = computed(() => {
-    const d = getBeijingTime(currentDate.value)
+    const d = toBeijingTime(currentDate.value)
     const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }
     return d.toLocaleDateString('zh-CN', options)
 })
 
 const dayOfWeek = computed(() => {
-    const d = getBeijingTime(currentDate.value)
+    const d = toBeijingTime(currentDate.value)
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
     return dayNames[d.getDay()]
 })
 
 const dayValue = computed(() => {
-    const d = getBeijingTime(currentDate.value)
+    const d = toBeijingTime(currentDate.value)
     const month = d.getMonth() + 1
     const day = d.getDate()
     return `${month}月${day}日`
 })
 
 const weekNumber = computed(() => {
-    const d = getBeijingTime(currentDate.value)
-    const startOfYear = new Date(d.getFullYear(), 0, 1)
-    const days = Math.floor((d.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000))
-    const weekNum = Math.ceil((days + startOfYear.getDay() + 1) / 7)
+    const d = toBeijingTime(currentDate.value)
+    const weekNum = getWeekNumber(d)
     return `第${weekNum}周`
 })
 
 const weekRange = computed(() => {
-    const d = getBeijingTime(currentDate.value)
+    const d = toBeijingTime(currentDate.value)
     const weekStart = getWeekStart(d)
     const weekEnd = new Date(weekStart)
     weekEnd.setDate(weekStart.getDate() + 6)
@@ -421,13 +385,6 @@ const weekRange = computed(() => {
     return `${String(startMonth).padStart(2, '0')}-${String(startDay).padStart(2, '0')} — ${String(endMonth).padStart(2, '0')}-${String(endDay).padStart(2, '0')}`
 })
 
-function formatWeekDay(date) {
-    const d = getBeijingTime(date)
-    const month = d.getMonth() + 1
-    const day = d.getDate()
-    return `${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-}
-
 function getWeekTaskNumber(dayIndex, planIndex) {
     let count = 1
     for (let i = 0; i < dayIndex; i++) {
@@ -436,16 +393,12 @@ function getWeekTaskNumber(dayIndex, planIndex) {
     return count + planIndex
 }
 
-function getHistoryCount() {
-    return incompleteHistoryPlans.value.length
-}
-
 function showDatePicker() {
-    const dateStr = prompt('请输入日期 (YYYY-MM-DD)', formatDate(getBeijingTime(currentDate.value)))
+    const dateStr = prompt('请输入日期 (YYYY-MM-DD)', formatDate(toBeijingTime(currentDate.value)))
     if (dateStr) {
         const newDate = new Date(dateStr)
         if (!isNaN(newDate.getTime())) {
-            currentDate.value = getBeijingTime(newDate)
+            currentDate.value = toBeijingTime(newDate)
             loadPlansForCurrentView()
         }
     }
@@ -453,18 +406,18 @@ function showDatePicker() {
 
 function navigatePrevious() {
     if (viewMode.value === 'day') {
-        currentDate.value = getBeijingTime(new Date(currentDate.value.getTime() - 24 * 60 * 60 * 1000))
+        currentDate.value = toBeijingTime(new Date(currentDate.value.getTime() - 24 * 60 * 60 * 1000))
     } else {
-        currentDate.value = getBeijingTime(new Date(currentDate.value.getTime() - 7 * 24 * 60 * 60 * 1000))
+        currentDate.value = toBeijingTime(new Date(currentDate.value.getTime() - 7 * 24 * 60 * 60 * 1000))
     }
     loadPlansForCurrentView()
 }
 
 function navigateNext() {
     if (viewMode.value === 'day') {
-        currentDate.value = getBeijingTime(new Date(currentDate.value.getTime() + 24 * 60 * 60 * 1000))
+        currentDate.value = toBeijingTime(new Date(currentDate.value.getTime() + 24 * 60 * 60 * 1000))
     } else {
-        currentDate.value = getBeijingTime(new Date(currentDate.value.getTime() + 7 * 24 * 60 * 60 * 1000))
+        currentDate.value = toBeijingTime(new Date(currentDate.value.getTime() + 7 * 24 * 60 * 60 * 1000))
     }
     loadPlansForCurrentView()
 }
@@ -472,12 +425,12 @@ function navigateNext() {
 async function loadPlansForCurrentView() {
     try {
         if (viewMode.value === 'day') {
-            const dateStr = formatDate(getBeijingTime(currentDate.value))
+            const dateStr = formatDate(toBeijingTime(currentDate.value))
             const plans = await userStore.getPlansByDate(dateStr)
             dayPlans.value = plans
             allPlans.value = await userStore.getIncompletePlans()
         } else {
-            const weekStart = getWeekStart(getBeijingTime(currentDate.value))
+            const weekStart = getWeekStart(toBeijingTime(currentDate.value))
             const weekStartStr = formatDate(weekStart)
             const weekData = await userStore.getPlansByWeek(weekStartStr)
             allPlans.value = weekData
@@ -499,7 +452,7 @@ async function addPlan() {
     if (!newPlanContent.value.trim()) return
 
     try {
-        const dateStr = viewMode.value === 'day' ? formatDate(getBeijingTime(currentDate.value)) : null
+        const dateStr = viewMode.value === 'day' ? formatDate(toBeijingTime(currentDate.value)) : null
         const plan = await userStore.createPlan(newPlanContent.value, dateStr)
         if (viewMode.value === 'day') {
             dayPlans.value.push(plan)
