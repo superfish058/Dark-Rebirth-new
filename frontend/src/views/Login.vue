@@ -81,8 +81,12 @@ const error = ref('')
 // 页面加载时检查本地存储
 const initForm = () => {
   const savedUsername = localStorage.getItem('rememberedUsername')
+  const savedPassword = localStorage.getItem('rememberedPassword')
   if (savedUsername) {
     username.value = savedUsername
+    if (savedPassword) {
+      password.value = atob(savedPassword)
+    }
     rememberMe.value = true
   }
 }
@@ -104,8 +108,10 @@ async function handleLogin() {
     // 处理记住我功能
     if (rememberMe.value) {
       localStorage.setItem('rememberedUsername', username.value)
+      localStorage.setItem('rememberedPassword', btoa(password.value))
     } else {
       localStorage.removeItem('rememberedUsername')
+      localStorage.removeItem('rememberedPassword')
     }
     
     // 根据设备类型路由到不同视图

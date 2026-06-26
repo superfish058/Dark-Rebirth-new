@@ -11,6 +11,8 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // 允许 Capacitor 加载
+    cors: true,
     proxy: {
       '/api': {
         target: 'http://localhost:3000',

@@ -1,12 +1,12 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import DesktopView from '../views/desktop/DesktopView.vue'
 
-// 检测设备类型
+// 检测设备类型（Capacitor 环境始终视为移动端）
 function isMobileDevice() {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  return !!window.Capacitor || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
 }
 
 // 移动端路由
@@ -75,7 +75,8 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  // Capacitor 环境下使用 hash 模式（兼容 file:// 协议），否则用 history 模式
+  history: window.Capacitor ? createWebHashHistory() : createWebHistory(),
   routes
 })
 

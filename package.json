@@ -5,7 +5,13 @@
   "main": "index.js",
   "scripts": {
     "dev": "concurrently \"cd frontend && npm run dev\" \"cd backend && npm run dev\"",
-    "ps": "netstat -ano | findstr \"LISTENING\" | findstr \":3000 :5173 :5174 :5175\"",
+    "dev:app": "cd app && npm run dev",
+    "dev:all": "concurrently \"cd frontend && npm run dev\" \"cd backend && npm run dev\" \"cd app && npm run dev\"",
+    "build:app": "cd app && npm run build",
+    "cap:sync": "cd app && npx cap sync",
+    "cap:windows": "cd app && npx cap open @capacitor/windows",
+    "cap:android": "cd app && npx cap open @capacitor/android",
+    "ps": "netstat -ano | findstr \"LISTENING\" | findstr \":3000 :5173 :5174 :5175 :5180\"",
     "kill": "taskkill /F /IM node.exe"
   },
   "repository": {

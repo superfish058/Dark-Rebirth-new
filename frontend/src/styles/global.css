@@ -21,6 +21,29 @@
   box-sizing: border-box;
 }
 
+/* 自定义滚动条 - 仿 Chrome 细滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 body {
   font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
   background-color: var(--bg-primary);

@@ -499,7 +499,12 @@ function getCategoryForWebsite(website, categories) {
 
 // 打开网站
 function openWebsite(url) {
-  window.open(url, '_blank')
+  // Electron 环境：用系统默认浏览器打开（复用已有窗口）
+  if (window.electronAPI?.openExternal) {
+    window.electronAPI.openExternal(url)
+  } else {
+    window.open(url, '_blank')
+  }
 }
 
 // 截断URL
